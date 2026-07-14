@@ -244,8 +244,8 @@
   .onboard-step span { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
   .onboard-cta {
     appearance: none; border: 0; background: var(--accent); color: var(--on-accent);
-    font-family: var(--sans); font-size: 14px; font-weight: 600; padding: 11px 18px;
-    border-radius: 10px; cursor: pointer;
+    font-family: var(--sans); font-size: 15px; font-weight: 600; padding: 13px 22px;
+    border-radius: 10px; cursor: pointer; width: 100%; max-width: 360px;
   }
   .onboard-cta:hover { filter: brightness(1.06); }
   .results-skeleton { display: none; margin-top: 4px; }
@@ -346,6 +346,7 @@
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--border); border-radius: 14px;
     box-shadow: 0 10px 28px -18px rgba(16, 24, 40, 0.18);
+    overflow: visible; min-width: 0;
   }
   .ask-panel .mode-groups { margin-top: 0; margin-bottom: 0; }
   .ask-panel .ask { margin-top: 0; }
@@ -374,25 +375,26 @@
   .mode-pill:hover { color: var(--text); }
   .mode-pill[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 
-  /* Ask bar */
+  /* Ask bar — stacked so the CTA never clips beside long questions */
   .ask {
-    margin-top: 20px; background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 8px 8px 8px 16px;
-    display: flex; align-items: flex-end; gap: 10px;
+    margin-top: 0; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 14px 14px;
+    display: flex; flex-direction: column; align-items: stretch; gap: 12px;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .ask:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
   #q {
-    flex: 1; background: transparent; border: 0; outline: 0; resize: none;
+    width: 100%; min-width: 0; background: transparent; border: 0; outline: 0; resize: none;
     color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.5;
-    padding: 10px 0; max-height: 160px;
+    padding: 4px 0; max-height: 160px;
   }
   #q::placeholder { color: var(--text-faint); }
+  #q { min-height: 2.8em; }
 
   button.primary {
-    flex: 0 0 auto; background: var(--accent); color: var(--on-accent); border: 0;
-    border-radius: 10px; font-family: var(--sans); font-size: 14.5px; font-weight: 600;
-    padding: 11px 18px; cursor: pointer; transition: filter .15s ease, opacity .15s ease;
+    width: 100%; background: var(--accent); color: var(--on-accent); border: 0;
+    border-radius: 10px; font-family: var(--sans); font-size: 15px; font-weight: 600;
+    padding: 13px 18px; cursor: pointer; transition: filter .15s ease, opacity .15s ease;
   }
   button.primary:hover { filter: brightness(1.06); }
   button.primary:active { filter: brightness(0.96); }
