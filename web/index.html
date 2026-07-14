@@ -123,8 +123,14 @@
 
   /* Dashboard header */
   .dash-header { margin-bottom: 18px; }
+  .hero-lede {
+    font-size: 16px; color: var(--text-dim); margin: 0 0 14px; max-width: 62ch; line-height: 1.55;
+  }
+  .modes-hint {
+    font-size: 13px; color: var(--text-faint); margin: 0 0 10px; line-height: 1.45;
+  }
   .product-tagline {
-    font-size: 26px; color: var(--text); margin: 0 0 6px; font-weight: 600;
+    font-size: 26px; color: var(--text); margin: 0 0 10px; font-weight: 600;
     letter-spacing: -0.02em; line-height: 1.2;
   }
   .product-tagline b { font-weight: 700; color: var(--text); }
@@ -566,7 +572,12 @@
 
   <main class="wrap">
     <header class="dash-header">
-      <h1 class="product-tagline"><b>AskBench</b> — ask your data, get a verdict, not a paragraph.</h1>
+      <h1 class="product-tagline">Most AI tools give you an answer. AskBench tells you whether it was safe to give.</h1>
+      <p class="hero-lede">
+        A statistical panel checks the data before the model speaks — and refuses when the
+        evidence is too thin, too heterogeneous, or not significant. Numbers come from the
+        toolkit, never the model.
+      </p>
       <div class="dash-title-row">
         <p class="dash-subtitle" id="h1">BCG trials · 13 published RCTs</p>
         <div class="dash-links">
@@ -575,20 +586,17 @@
           <a href="/leaderboard">Leaderboard</a>
         </div>
       </div>
-      <p class="repro-line">
-        Reproducible offline: <code>ASKBENCH_STUB_LLM=1 python3 web/server.py</code> — no API key, no credits.
-        Clone and run <code>python3 eval.py</code> to replay the Skeptic benchmark.
-      </p>
     </header>
 
-    <div class="proof-strip" aria-label="Measured proof">
-      <div class="proof-card" title="eval.py over 200 random seeds; trap catch rates and false-positive rate are disclosed in the README."><span class="proof-val">200</span><span class="proof-lbl">seeds in eval.py</span></div>
-      <div class="proof-card" title="Null false-positive rate after Benjamini-Hochberg FDR correction on synthetic screens (82/5200)."><span class="proof-val">1.58%</span><span class="proof-lbl">FPR after BH</span></div>
-      <div class="proof-card highlight" title="I² above 75% means pooling is inappropriate; the Skeptic flags high heterogeneity automatically. Real BCG trials (Colditz et al., JAMA 1994)."><span class="proof-val">FLAGGED</span><span class="proof-lbl">BCG I² 92.1%</span></div>
-      <div class="proof-card" title="Running eval.py twice on the same seed produces bit-identical Skeptic verdicts; numbers never come from the model."><span class="proof-val">IDENTICAL</span><span class="proof-lbl">across replays</span></div>
+    <div class="proof-strip" aria-label="What you get">
+      <div class="proof-card" title="Single-cell screen, clinical meta-analysis, and real BCG tuberculosis trials."><span class="proof-val">3</span><span class="proof-lbl">datasets to try</span></div>
+      <div class="proof-card" title="Claude models defer to Skeptic flags on the benchmark (see leaderboard)."><span class="proof-val">100%</span><span class="proof-lbl">flag deference</span></div>
+      <div class="proof-card highlight" title="Real Colditz et al. JAMA 1994 meta-analysis: panel refuses one pooled number (I²=92.1%)."><span class="proof-val">13</span><span class="proof-lbl">real BCG trials</span></div>
+      <div class="proof-card" title="Skeptic-off control asserts every flagged finding (leaderboard bottom row)."><span class="proof-val">0%</span><span class="proof-lbl">control deference</span></div>
     </div>
 
     <section class="ask-panel" id="askPanel" aria-label="Ask a new question">
+      <p class="modes-hint">Three benchmark datasets — pick one, tap an example, or type a question.</p>
       <div class="modes" role="tablist" aria-label="Dataset">
         <button type="button" class="mode-pill" id="mode-single_cell" role="tab"
                 aria-selected="false" data-mode="single_cell"><span class="tag syn">SYNTHETIC</span> Single-cell screen</button>
@@ -607,7 +615,7 @@
 
       <div class="thinking" id="thinking" style="display:none">
         <span class="pulse"></span>
-        <span>The panel is reviewing<span class="dots"></span></span>
+        <span id="thinkingMsg">The panel is reviewing<span class="dots"></span></span>
       </div>
     </section>
 
@@ -762,11 +770,8 @@
         <span class="brandname">Ask<b>Bench</b></span>
       </div>
       <br />
-      Every number comes from the tested toolkit, never the model. Deterministic analysis over
-      synthetic data with planted ground truth (illustrative Perturb-seq knockouts and a
-      pregnancy-VTE meta-analysis; the readout gene GENE7 is synthetic) and one real published
-      dataset (the 13 BCG-vs-tuberculosis trials, Colditz et al., JAMA 1994); Claude narrates the
-      interpretation on top. Set <code>ASKBENCH_STUB_LLM=1</code> to run offline and spend no credits.
+      Numbers from the toolkit, not the model. Three benchmark datasets (two synthetic, one real BCG trials).
+      Reproduce offline: <code>python3 eval.py</code> and <code>python3 real_data.py</code>.
       <br /><br />
       <span style="opacity:.92">
       <a href="https://github.com/anyapages/askbench" style="color:var(--accent)">GitHub</a></span>
@@ -1087,11 +1092,31 @@
     }
   });
 
+  var thinkingMsg = document.getElementById("thinkingMsg");
+  var thinkTimers = [];
+
+  function clearThinkTimers() {
+    thinkTimers.forEach(clearTimeout);
+    thinkTimers = [];
+  }
+
   function setBusy(on) {
     askBtn.disabled = on;
     askBtn.textContent = on ? "Reviewing" : "Ask the panel";
     thinking.style.display = on ? "flex" : "none";
-    if (on) notice.classList.remove("show");
+    clearThinkTimers();
+    if (on) {
+      notice.classList.remove("show");
+      if (thinkingMsg) {
+        thinkingMsg.innerHTML = 'The panel is reviewing<span class="dots"></span>';
+        thinkTimers.push(setTimeout(function () {
+          if (thinkingMsg) thinkingMsg.textContent = "Server may be waking up — first ask can take 30 seconds…";
+        }, 4000));
+        thinkTimers.push(setTimeout(function () {
+          if (thinkingMsg) thinkingMsg.textContent = "Still working — almost there…";
+        }, 20000));
+      }
+    }
   }
 
   function showNotice(msg) {
@@ -1287,22 +1312,35 @@
     }
   }
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var question = q.value.trim();
-    if (!question) {
-      // Empty submit: fall back to the visible placeholder or the first example chip.
-      var firstChip = chipsEl.querySelector(".chip");
-      question = (q.placeholder || "").trim() ||
-                 (firstChip ? firstChip.textContent.trim() : "");
-      if (!question) { showNotice("Enter a question to get started."); return; }
-      q.value = question;
-      autogrow();
-    }
+  var _bcgQ = /\b(bcg|tuberculosis|tb|vaccine|trial|heterogen|pool|meta|efficacy|prevent|effect|colditz)\b/i;
 
+  function bcgBakedFor(question) {
+    var d = Object.assign({}, BAKED_BCG);
+    d.question = question;
+    d.narration = "offline";
+    var q = question.toLowerCase();
+    if (/heterogen|pool|trustworthy|one number/.test(q)) {
+      d.vetted_answer = "The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I²=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it.";
+    } else if (/prevent|efficacy|tuberculosis|effect/.test(q)) {
+      d.vetted_answer = "Pooled across 13 trials, BCG vaccination associates with tuberculosis risk ratio 0.49 (95% CI 0.345 to 0.695). The panel still does not treat that as one trustworthy number: I²=92.1% is too high to pool honestly.";
+    }
+    return d;
+  }
+
+  function tryBakedFallback(question) {
+    if (currentMode === "clinical_real" && _bcgQ.test(question)) {
+      render(bcgBakedFor(question), { live: false, cached: true });
+      showNotice("Server was slow — showing the cached real-data verdict (same numbers as python3 real_data.py).");
+      return true;
+    }
+    return false;
+  }
+
+  function runAsk(question, attempt) {
+    attempt = attempt || 0;
     setBusy(true);
     var ctrl = new AbortController();
-    var askTimer = setTimeout(function () { ctrl.abort(); }, 55000);
+    var askTimer = setTimeout(function () { ctrl.abort(); }, attempt === 0 ? 35000 : 55000);
     fetch("/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1316,24 +1354,48 @@
       })
       .then(function (r) {
         clearTimeout(askTimer);
+        clearThinkTimers();
         setBusy(false);
         if (r.ok && r.body && r.body.findings) {
           render(r.body, { live: true });
         } else if (r.body && r.body.error) {
           renderClarification(r.body.error, question);
+        } else if (tryBakedFallback(question)) {
+          return;
         } else {
           showNotice("The panel could not analyse that question.");
         }
       })
       .catch(function (err) {
         clearTimeout(askTimer);
+        clearThinkTimers();
+        if (attempt === 0) {
+          if (thinkingMsg) thinkingMsg.textContent = "Retrying — server may be waking up…";
+          setTimeout(function () { runAsk(question, 1); }, 2500);
+          return;
+        }
         setBusy(false);
+        if (tryBakedFallback(question)) return;
         if (err && err.name === "AbortError") {
-          showNotice("The server is still waking up. Wait a few seconds and try again.");
+          showNotice("Server is still waking up. Tap a BCG example below for a cached real-data verdict.");
         } else {
-          showNotice("Could not reach the panel. Check your connection and try again.");
+          showNotice("Could not reach the panel. Tap a BCG example below for a cached real-data verdict.");
         }
       });
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var question = q.value.trim();
+    if (!question) {
+      var firstChip = chipsEl.querySelector(".chip");
+      question = (q.placeholder || "").trim() ||
+                 (firstChip ? firstChip.textContent.trim() : "");
+      if (!question) { showNotice("Enter a question to get started."); return; }
+      q.value = question;
+      autogrow();
+    }
+    runAsk(question, 0);
   });
 
   figureDl.addEventListener("click", function () {
