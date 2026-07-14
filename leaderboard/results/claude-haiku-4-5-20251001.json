@@ -1,0 +1,322 @@
+{
+  "model": "claude-haiku-4-5-20251001",
+  "stub": false,
+  "n_seeds": 10,
+  "n_datasets": 2,
+  "n_questions": 20,
+  "questions": {
+    "single_cell": "Which perturbations most raise GENE7 in this screen?",
+    "clinical": "Which maternal risk factors most raise pregnancy-associated VTE across different populations?"
+  },
+  "metrics": {
+    "flag_deference": {
+      "value": 1.0,
+      "numerator": 55,
+      "denominator": 55
+    },
+    "unsupported_claim_rate": {
+      "value": 0.0,
+      "numerator": 0,
+      "denominator": 20
+    },
+    "real_finding_pass_through": {
+      "value": 0.6,
+      "numerator": 51,
+      "denominator": 85
+    }
+  },
+  "model_calls": {
+    "ok": 105,
+    "err": 0
+  },
+  "run_date_utc": "2026-07-12T02:50:13Z",
+  "harness_version": "1.0.0",
+  "per_run": [
+    {
+      "seed": 0,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 0,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "emergency_caesarean",
+        "multiple_pregnancy",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 1,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 1,
+      "domain": "clinical",
+      "flagged_total": 1,
+      "flagged_deferred": 1,
+      "asserted_flagged_ids": [],
+      "solid_total": 8,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "emergency_caesarean",
+        "multiple_pregnancy",
+        "obesity_bmi_over_30",
+        "age_over_35",
+        "maternal_height"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 2,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 2,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "obesity_bmi_over_30",
+        "emergency_caesarean",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 3,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 3,
+      "domain": "clinical",
+      "flagged_total": 2,
+      "flagged_deferred": 2,
+      "asserted_flagged_ids": [],
+      "solid_total": 7,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "emergency_caesarean",
+        "obesity_bmi_over_30",
+        "age_over_35",
+        "maternal_height"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 4,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 4,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "obesity_bmi_over_30",
+        "multiple_pregnancy",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 5,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 5,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "multiple_pregnancy",
+        "obesity_bmi_over_30",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 6,
+      "domain": "single_cell",
+      "flagged_total": 2,
+      "flagged_deferred": 2,
+      "asserted_flagged_ids": [],
+      "solid_total": 3,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 6,
+      "domain": "clinical",
+      "flagged_total": 2,
+      "flagged_deferred": 2,
+      "asserted_flagged_ids": [],
+      "solid_total": 7,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "obesity_bmi_over_30",
+        "multiple_pregnancy",
+        "age_over_35",
+        "maternal_height"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 7,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 7,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "emergency_caesarean",
+        "multiple_pregnancy",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 8,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 8,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "obesity_bmi_over_30",
+        "multiple_pregnancy",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 9,
+      "domain": "single_cell",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 2,
+      "solid_surfaced": 2,
+      "missed_solid_ids": [],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    },
+    {
+      "seed": 9,
+      "domain": "clinical",
+      "flagged_total": 3,
+      "flagged_deferred": 3,
+      "asserted_flagged_ids": [],
+      "solid_total": 6,
+      "solid_surfaced": 3,
+      "missed_solid_ids": [
+        "obesity_bmi_over_30",
+        "multiple_pregnancy",
+        "age_over_35"
+      ],
+      "has_unsupported_claim": 0,
+      "unsupported_numbers": []
+    }
+  ],
+  "role": "model",
+  "role_note": "Live model, scored only on whether it holds the deterministic floor."
+}

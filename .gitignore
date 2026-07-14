@@ -1,0 +1,22 @@
+# secrets: never commit
+.env
+.env.*
+*.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# os
+.DS_Store
+
+# node / web build
+node_modules/
+public/
+.vercel
+
+# local vercel project backup, not for the repo
+.vercel_aqta_backup/
+api/__pycache__/

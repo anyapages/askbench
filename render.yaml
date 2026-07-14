@@ -1,0 +1,29 @@
+# One-click live demo on Render: New > Blueprint > point at this repo > Apply.
+#
+# Safe by default: with no ANTHROPIC_API_KEY set, the demo runs model-free (canned
+# narration), and the deterministic numbers, the whole point, work fully.
+#
+# To show Claude narrating LIVE (real data, real time), set ANTHROPIC_API_KEY in
+# the dashboard (Environment > Add, secret). The server then narrates with Claude
+# and falls back to the canned sentence under a model error, a per-IP rate limit
+# (8/min), or the daily budget below, so a public link can never break and can
+# never drain the key. Raise or lower ASKBENCH_LIVE_BUDGET as you like; ~400
+# Haiku narration calls a day is a few cents. Only the narration uses the model;
+# every statistic is still computed by the toolkit.
+services:
+  - type: web
+    name: askbench
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn web.server:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1"
+    envVars:
+      # Set this in the dashboard (secret) to turn on live Claude narration.
+      # Leave it unset for the safe model-free demo.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Daily cap on live model calls. Falls back to canned narration past it.
+      - key: ASKBENCH_LIVE_BUDGET
+        value: "400"
+      - key: PYTHON_VERSION
+        value: "3.12.4"

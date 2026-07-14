@@ -1,0 +1,7 @@
+flask>=3.0
+gunicorn>=21.0
+anthropic>=0.40
+numpy>=1.26
+scipy>=1.11
+matplotlib>=3.8
+mcp>=1.9          # optional: only needed to run askbench_mcp.py (the MCP server)
