@@ -4,6 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="description" content="Paste your meta-analysis table. AskBench pools per-study estimates in the browser and refuses when one combined number would mislead. Toolkit computes; Skeptic signs off." />
+<link rel="canonical" href="https://askbench-weld.vercel.app/" />
+<meta property="og:url" content="https://askbench-weld.vercel.app/" />
+<meta property="og:title" content="AskBench" />
+<meta property="og:description" content="A statistical panel checks the evidence before the model speaks — and refuses when pooling is not safe." />
 <!--
   AskBench — the analysis agent that says no. Numbers by the toolkit, never the model.
   MIT licensed.
@@ -1052,6 +1056,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
           Reproduce offline: <code>python3 eval.py</code> · <code>python3 real_data.py</code>
         </p>
         <div class="footer-links">
+          <a href="https://askbench-weld.vercel.app">askbench-weld.vercel.app</a>
           <a href="https://github.com/anyapages/askbench">GitHub</a>
           <span class="footer-meta">Built with Claude Code · Life Sciences 2026</span>
         </div>
@@ -1070,6 +1075,8 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
 <script>
 (function () {
   "use strict";
+
+  var PUBLIC_SITE = "https://askbench-weld.vercel.app";
 
   var form = document.getElementById("askForm");
   var q = document.getElementById("q");
@@ -2388,6 +2395,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
       var d = lastRenderedData;
       var lines = [
         "AskBench panel verdict",
+        PUBLIC_SITE,
         "Question: " + (d.question || ""),
         "",
         d.safe_report || "",
