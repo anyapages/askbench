@@ -1586,7 +1586,12 @@
   function loadBakedYours() {
     if (bakedYoursPromise) return bakedYoursPromise;
     bakedYoursPromise = fetch("/baked_yours.json")
-      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (res) {
+        if (!res.ok) return null;
+        var ct = (res.headers.get("content-type") || "").toLowerCase();
+        if (ct.indexOf("json") === -1) return null;
+        return res.json();
+      })
       .then(function (j) { BAKED_YOURS = j || null; return BAKED_YOURS; })
       .catch(function () { return null; });
     return bakedYoursPromise;

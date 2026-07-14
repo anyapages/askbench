@@ -32,7 +32,7 @@ def main() -> None:
         r = clinical_lab_meeting(q, data, llm=stub)
         r["narration"] = "offline"
         baked[q] = r
-    out = ROOT / "public" / "baked_yours.json"
+    out = ROOT / "web" / "baked_yours.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(baked, separators=(",", ":")), encoding="utf-8")
     print(f"wrote {out} ({out.stat().st_size} bytes, {len(QUESTIONS)} questions)")

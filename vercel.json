@@ -1,14 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "mkdir -p public && cp web/index.html web/leaderboard.html public/ && python3 scripts/bake_leaderboard_json.py && python3 scripts/bake_yours_demo.py",
+  "buildCommand": "mkdir -p public && cp web/index.html web/leaderboard.html public/ && cp web/baked_yours.json public/ && python3 scripts/bake_leaderboard_json.py",
   "builds": [
-    { "src": "public/**", "use": "@vercel/static" }
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "web/baked_yours.json", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/ask", "dest": "https://askbench.onrender.com/ask" },
     { "src": "/leaderboard/results.json", "dest": "/public/leaderboard/results.json" },
     { "src": "/leaderboard/results", "dest": "https://askbench.onrender.com/leaderboard/results" },
     { "src": "/leaderboard", "dest": "/public/leaderboard.html" },
+    { "src": "/baked_yours.json", "dest": "/web/baked_yours.json" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/public/index.html" }
   ],
