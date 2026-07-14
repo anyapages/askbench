@@ -3,11 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="author" content="Anya Chueayen" />
 <meta name="description" content="AskBench: a bench scientist asks their data a question in plain English, and the panel refuses when the statistics don't support the answer. Numbers by a tested toolkit, never the model." />
 <!--
-  AskBench, built by Anya Chueayen  (github.com/anyapages)
-  The analysis agent that says no. Numbers by the toolkit, never the model.
+  AskBench — the analysis agent that says no. Numbers by the toolkit, never the model.
   MIT licensed.
 -->
 <title>AskBench</title>
@@ -126,10 +124,20 @@
   /* Dashboard header */
   .dash-header { margin-bottom: 18px; }
   .product-tagline {
-    font-size: 14px; color: var(--text-dim); margin: 0 0 8px; font-weight: 500;
-    letter-spacing: -0.01em;
+    font-size: 26px; color: var(--text); margin: 0 0 6px; font-weight: 600;
+    letter-spacing: -0.02em; line-height: 1.2;
   }
   .product-tagline b { font-weight: 700; color: var(--text); }
+  .dash-subtitle {
+    font-size: 15px; color: var(--text-dim); margin: 0; font-weight: 500;
+  }
+  .repro-line {
+    font-size: 13px; color: var(--text-faint); margin: 10px 0 0; line-height: 1.5;
+  }
+  .repro-line code {
+    font-family: var(--mono); font-size: 12px; color: var(--text-dim);
+    background: var(--panel-2); padding: 2px 7px; border-radius: 6px; border: 1px solid var(--border);
+  }
   .dash-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .dash-links { font-size: 13px; color: var(--text-dim); white-space: nowrap; padding-top: 6px; }
   .dash-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
@@ -155,6 +163,7 @@
   }
   .proof-card.highlight .proof-val { color: var(--flag); }
   .proof-lbl { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+  .proof-card[title] { cursor: help; }
 
   /* Worklist: session history, below the verdict */
   .worklist-panel {
@@ -489,7 +498,7 @@
   @media (max-width: 560px) {
     .topbar { padding: 10px 16px; }
     .wrap { padding: 24px 18px 72px; }
-    h1 { font-size: 24px; }
+    h1.product-tagline { font-size: 22px; }
     .proof-strip { grid-template-columns: 1fr 1fr; }
     .ask-panel { top: 44px; padding: 12px 12px 10px; }
     .modes { width: 100%; }
@@ -552,22 +561,26 @@
 
   <main class="wrap">
     <header class="dash-header">
-      <p class="product-tagline"><b>AskBench</b> — ask your data, get a verdict, not a paragraph.</p>
+      <h1 class="product-tagline"><b>AskBench</b> — ask your data, get a verdict, not a paragraph.</h1>
       <div class="dash-title-row">
-        <h1 id="h1">Ask your single-cell screen a question.</h1>
+        <p class="dash-subtitle" id="h1">BCG trials · 13 published RCTs</p>
         <div class="dash-links">
           <a href="https://github.com/anyapages/askbench">GitHub</a>
           <span style="opacity:.45"> · </span>
           <a href="/leaderboard">Leaderboard</a>
         </div>
       </div>
+      <p class="repro-line">
+        Reproducible offline: <code>ASKBENCH_STUB_LLM=1 python3 web/server.py</code> — no API key, no credits.
+        Clone and run <code>python3 eval.py</code> to replay the Skeptic benchmark.
+      </p>
     </header>
 
     <div class="proof-strip" aria-label="Measured proof">
-      <div class="proof-card"><span class="proof-val">200</span><span class="proof-lbl">seeds in eval.py</span></div>
-      <div class="proof-card"><span class="proof-val">1.58%</span><span class="proof-lbl">FPR after BH</span></div>
-      <div class="proof-card highlight"><span class="proof-val">FLAGGED</span><span class="proof-lbl">BCG I² 92.1%</span></div>
-      <div class="proof-card"><span class="proof-val">IDENTICAL</span><span class="proof-lbl">across replays</span></div>
+      <div class="proof-card" title="eval.py over 200 random seeds; trap catch rates and false-positive rate are disclosed in the README."><span class="proof-val">200</span><span class="proof-lbl">seeds in eval.py</span></div>
+      <div class="proof-card" title="Null false-positive rate after Benjamini-Hochberg FDR correction on synthetic screens (82/5200)."><span class="proof-val">1.58%</span><span class="proof-lbl">FPR after BH</span></div>
+      <div class="proof-card highlight" title="I² above 75% means pooling is inappropriate; the Skeptic flags high heterogeneity automatically. Real BCG trials (Colditz et al., JAMA 1994)."><span class="proof-val">FLAGGED</span><span class="proof-lbl">BCG I² 92.1%</span></div>
+      <div class="proof-card" title="Running eval.py twice on the same seed produces bit-identical Skeptic verdicts; numbers never come from the model."><span class="proof-val">IDENTICAL</span><span class="proof-lbl">across replays</span></div>
     </div>
 
     <section class="ask-panel" id="askPanel" aria-label="Ask a new question">
@@ -607,7 +620,7 @@
       </div>
 
       <div class="debate-block" id="debateBlock">
-        <p class="debate-title">The lab meeting</p>
+        <p class="debate-title">Panel discussion</p>
         <div id="debateTurns"></div>
       </div>
 
@@ -749,8 +762,7 @@
       dataset (the 13 BCG-vs-tuberculosis trials, Colditz et al., JAMA 1994); Claude narrates the
       interpretation on top. Set <code>ASKBENCH_STUB_LLM=1</code> to run offline and spend no credits.
       <br /><br />
-      <span style="opacity:.92">Built by Anya &middot;
-      <a href="https://www.linkedin.com/in/anya-pc" style="color:var(--accent)">LinkedIn</a> &middot;
+      <span style="opacity:.92">
       <a href="https://github.com/anyapages/askbench" style="color:var(--accent)">GitHub</a></span>
       <br /><br />
       <span style="opacity:.72;font-size:13px">Built with Claude Code &middot; Life Sciences 2026.</span>

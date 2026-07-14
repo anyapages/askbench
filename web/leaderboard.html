@@ -158,10 +158,18 @@
     padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;
   }
   .cmd-block {
-    display: block; font-family: var(--mono); font-size: 13px; color: var(--text);
+    display: block; flex: 1; font-family: var(--mono); font-size: 13px; color: var(--text);
     background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 14px; margin: 8px 0 4px; overflow-x: auto; white-space: pre;
+    padding: 12px 14px; margin: 0; overflow-x: auto; white-space: pre;
   }
+  .cmd-row { display: flex; align-items: stretch; gap: 8px; margin: 8px 0 4px; }
+  .copy-btn {
+    flex-shrink: 0; align-self: stretch; padding: 0 14px; font-size: 13px; font-weight: 600;
+    color: var(--text); background: var(--panel); border: 1px solid var(--border-strong);
+    border-radius: 10px; cursor: pointer;
+  }
+  .copy-btn:hover { background: var(--bg-soft); }
+  .copy-btn.ok { color: var(--accent); border-color: var(--accent); }
   .queued { display: inline-block; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--text-faint); border: 1px dashed var(--border-strong); border-radius: 999px;
     padding: 1px 8px; margin-left: 8px; font-weight: 600; vertical-align: middle; }
@@ -279,12 +287,19 @@
       <div class="def">
         <b>Real-finding pass-through</b> <span class="arrow">higher is better</span><br />
         When a finding is genuinely real and the Skeptic passes it, this is the share the model
-        still carries through to its answer. It is the honest counterweight to deference: refusing
-        everything would look cautious but would drop real signal, and this column catches that.
+        still carries through to its answer. Live models cluster near <b>60%</b> because the Chair
+        names the top-ranked real findings, not every solid row. The Skeptic-off control hits
+        <b>100%</b> because it reports everything. Use <b>flag deference</b> to score override.
       </div>
     </div>
 
     <h2>Leaderboard</h2>
+    <p class="dim" style="font-size:14px; margin: 0 0 14px;">
+      <b>Read pass-through first:</b> the answer names the top-ranked real findings by design,
+      so live models cluster near <b>60%</b> (51/85); the Skeptic-off control hits <b>100%</b>
+      because it reports everything. <b>Flag deference</b> is the column that separates models
+      from override: Claude tiers sit at 98–100%, the control at 0%.
+    </p>
     <div id="board" aria-live="polite">
       <div class="table-scroll" id="tableScroll" hidden>
         <table>
@@ -304,16 +319,12 @@
       <div class="card empty" id="emptyState">Loading runs&hellip;</div>
     </div>
 
-    <p class="faint" style="font-size:13px;">
-      On <b>real-finding pass-through</b>: the answer names the top-ranked real findings by design,
-      so live models sit near 60% and the deterministic floor names all of them. The Skeptic-off
-      control passes 100% through precisely because it defers to nothing and reports everything,
-      which is why <b>deference</b>, not pass-through, is the column that tells respect from override.
-    </p>
-
     <h2>Add your model</h2>
     <p class="dim">A row appears here only when a real run has written its result file. One command:</p>
-    <code class="cmd-block">python3 leaderboard.py --model &lt;id&gt;</code>
+    <div class="cmd-row">
+      <code class="cmd-block" id="lbQuickstart">python3 leaderboard.py --model &lt;id&gt;</code>
+      <button type="button" class="copy-btn" id="copyQuickstart">Copy</button>
+    </div>
     <p class="faint" style="font-size:13px;">
       That writes <code class="cmd">leaderboard/results/&lt;id&gt;.json</code>; this page reads that
       folder on load. No file, no row: the benchmark does not carry a number it did not run.
@@ -474,6 +485,23 @@
       var next = current() === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
       try { localStorage.setItem("askbench-theme", next); } catch (e) {}
+    });
+  })();
+
+  (function () {
+    var btn = document.getElementById("copyQuickstart");
+    var cmd = document.getElementById("lbQuickstart");
+    if (!btn || !cmd) return;
+    btn.addEventListener("click", function () {
+      var text = cmd.textContent.trim();
+      function ok() {
+        btn.textContent = "Copied";
+        btn.classList.add("ok");
+        setTimeout(function () { btn.textContent = "Copy"; btn.classList.remove("ok"); }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(ok).catch(function () {});
+      }
     });
   })();
 </script>
