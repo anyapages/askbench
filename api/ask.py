@@ -1,8 +1,10 @@
-"""POST /ask — same panel logic as web/server.py, Vercel serverless."""
+"""POST /ask — panel on Vercel serverless (Claude narrates when ANTHROPIC_API_KEY is set)."""
 from __future__ import annotations
 
 import json
 import os
+import threading
+import time
 from http.server import BaseHTTPRequestHandler
 
 from api._bootstrap import ROOT  # noqa: F401
@@ -17,7 +19,51 @@ _BCG, _ = make_bcg_meta()
 
 _STUB = lambda system, user, model=None: "[offline] biological context unavailable without a model"
 _LIVE = (not os.environ.get("ASKBENCH_STUB_LLM")) and bool(os.environ.get("ANTHROPIC_API_KEY"))
-_LLM = make_llm() if _LIVE else _STUB
+_REAL_LLM = make_llm() if _LIVE else None
+
+_LIVE_BUDGET = int(os.environ.get("ASKBENCH_LIVE_BUDGET", "400"))
+_budget = {"day": None, "used": 0}
+_budget_lock = threading.Lock()
+_RATE_MAX = 8
+_RATE_WINDOW = 60.0
+_ip_hits: dict[str, list[float]] = {}
+_ip_lock = threading.Lock()
+
+
+def _budget_ok() -> bool:
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    with _budget_lock:
+        if _budget["day"] != day:
+            _budget["day"], _budget["used"] = day, 0
+        if _budget["used"] >= _LIVE_BUDGET:
+            return False
+        _budget["used"] += 1
+        return True
+
+
+def _rate_ok(ip: str) -> bool:
+    now = time.time()
+    with _ip_lock:
+        hits = [t for t in _ip_hits.get(ip, ()) if now - t < _RATE_WINDOW]
+        if len(hits) >= _RATE_MAX:
+            _ip_hits[ip] = hits
+            return False
+        hits.append(now)
+        _ip_hits[ip] = hits
+        return True
+
+
+def _pick_llm(ip: str):
+    if not (_LIVE and _rate_ok(ip) and _budget_ok()):
+        return _STUB, "offline"
+
+    def guarded(system, user, model="claude-haiku-4-5-20251001"):
+        try:
+            return _REAL_LLM(system, user, model=model)
+        except Exception:
+            return _STUB(system, user, model=model)
+
+    return guarded, "live"
 
 
 def _run(question: str, mode: str, ip: str = "unknown",
@@ -26,24 +72,25 @@ def _run(question: str, mode: str, ip: str = "unknown",
     if not question:
         return {"error": "Please enter a question."}, 400
     log_prompt(question, mode, ip)
+    chosen_llm, narration = _pick_llm(ip)
     try:
         if mode == "clinical":
-            result = clinical_lab_meeting(question, _VTE, llm=_LLM)
+            result = clinical_lab_meeting(question, _VTE, llm=chosen_llm)
         elif mode == "clinical_real":
-            result = clinical_lab_meeting(question, _BCG, llm=_LLM)
+            result = clinical_lab_meeting(question, _BCG, llm=chosen_llm)
         elif mode == "clinical_yours":
             data, err = parse_meta_csv(csv_text, outcome=outcome)
             if err:
                 return {"error": err, "question": question}, 422
-            result = clinical_lab_meeting(question, data, llm=_LLM)
+            result = clinical_lab_meeting(question, data, llm=chosen_llm)
         else:
-            result = lab_meeting(question, _DATA, llm=_LLM)
+            result = lab_meeting(question, _DATA, llm=chosen_llm)
     except Exception:
         return {"error": "The panel could not analyse that question."}, 500
     if "findings" not in result:
         return result, 422
     if isinstance(result, dict):
-        result["narration"] = "live" if _LIVE else "offline"
+        result["narration"] = narration
     return result, 200
 
 
@@ -63,8 +110,9 @@ class handler(BaseHTTPRequestHandler):
         csv_text = csv_raw if isinstance(csv_raw, str) else ""
         out_raw = payload.get("outcome")
         outcome = out_raw.strip() if isinstance(out_raw, str) and out_raw.strip() else "outcome"
-        body, status = _run(question, mode, self.headers.get("X-Forwarded-For", "vercel")[:64],
-                            csv_text=csv_text, outcome=outcome)
+        fwd = self.headers.get("X-Forwarded-For", "")
+        ip = fwd.split(",")[0].strip() if fwd else "vercel"
+        body, status = _run(question, mode, ip[:64], csv_text=csv_text, outcome=outcome)
         data = json.dumps(body).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
@@ -73,4 +121,4 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def log_message(self, fmt, *args):
-        return  # quiet on Vercel
+        return
