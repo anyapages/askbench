@@ -1086,10 +1086,14 @@
     targetEl.textContent = m.target({});
     answerEl.textContent = msg;
     datanoteEl.textContent = "";
+    datanoteEl.classList.remove("show");
     if (liveBadge) liveBadge.hidden = true;
-    debateBlock.style.display = "none";
-    figureBlock.style.display = "none";
-    refusalBlock.style.display = "none";
+    debateTurns.innerHTML = "";
+    debateBlock.classList.remove("show");
+    currentFigure = null;
+    figureImg.removeAttribute("src");
+    figureBlock.classList.remove("show");
+    refusalBlock.classList.remove("show");
     sourcesBlock.style.display = "none";
     metaEl.textContent = "";
     theadEl.innerHTML = "<tr>" + m.columns.map(function (c) {
