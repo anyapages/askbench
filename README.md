@@ -14,8 +14,8 @@ honestly (I2 = 92.1%). No model in the loop, one command, reproducible against t
 [A real finding, on real published data](#a-real-finding-on-real-published-data) below.
 
 **Try it live:** [askbench-weld.vercel.app](https://askbench-weld.vercel.app) (no sign-up,
-runs model-free by default). The frontend is static on Vercel; `/ask` and the leaderboard proxy
-to the Python backend on Render (`render.yaml`), which is where the numbers are computed.
+runs model-free by default). The frontend is static on Vercel; `/ask` runs as a Python
+function on the same deployment (set `ANTHROPIC_API_KEY` in Vercel for live narration).
 
 ## Can it tell a real finding from noise? Yes, and it is measured
 

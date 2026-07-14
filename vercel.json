@@ -1,18 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "mkdir -p public && cp web/index.html web/leaderboard.html web/meta_client.js public/ && cp web/baked_yours.json public/ && python3 scripts/bake_leaderboard_json.py",
+  "buildCommand": "mkdir -p public && cp web/index.html web/leaderboard.html web/meta_client.js public/ && cp web/baked_yours.json web/baked_benchmarks.json public/ && python3 scripts/bake_leaderboard_json.py && python3 scripts/bake_benchmarks.py",
   "builds": [
     { "src": "api/ask.py", "use": "@vercel/python" },
     { "src": "api/leaderboard_results.py", "use": "@vercel/python" },
     { "src": "public/**", "use": "@vercel/static" },
-    { "src": "web/baked_yours.json", "use": "@vercel/static" }
+    { "src": "web/meta_client.js", "use": "@vercel/static" },
+    { "src": "web/baked_yours.json", "use": "@vercel/static" },
+    { "src": "web/baked_benchmarks.json", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/ask", "dest": "api/ask.py" },
     { "src": "/leaderboard/results.json", "dest": "/public/leaderboard/results.json" },
     { "src": "/leaderboard/results", "dest": "api/leaderboard_results.py" },
     { "src": "/leaderboard", "dest": "/public/leaderboard.html" },
+    { "src": "/meta_client.js", "dest": "/web/meta_client.js" },
     { "src": "/baked_yours.json", "dest": "/web/baked_yours.json" },
+    { "src": "/baked_benchmarks.json", "dest": "/web/baked_benchmarks.json" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/public/index.html" }
   ],
