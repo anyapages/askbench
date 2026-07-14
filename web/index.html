@@ -942,6 +942,7 @@
   var notice = document.getElementById("notice");
   var answerEl = document.getElementById("answer");
   var questionAskedEl = document.getElementById("questionAsked");
+  var targetEl = document.getElementById("target");
   var datanoteEl = document.getElementById("datanote");
   var figureBlock = document.getElementById("figureBlock");
   var figureImg = document.getElementById("figureImg");
@@ -1504,7 +1505,7 @@
     }
     showQuestionAsked(question);
     var m = MODES[currentMode];
-    targetEl.textContent = "";
+    if (targetEl) targetEl.textContent = "";
     answerEl.textContent = msg;
     datanoteEl.textContent = "";
     datanoteEl.classList.remove("show");
@@ -1541,7 +1542,7 @@
     }
     if (findingsTableEl) findingsTableEl.style.display = "";
     showQuestionAsked(data.question);
-    targetEl.textContent = m.target(data);
+    if (targetEl) targetEl.textContent = m.target(data);
     answerEl.textContent = data.vetted_answer || "No answer returned.";
     lastRenderedData = data;
 

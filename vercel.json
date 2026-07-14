@@ -4,6 +4,8 @@
   "builds": [
     { "src": "api/ask.py", "use": "@vercel/python" },
     { "src": "api/leaderboard_results.py", "use": "@vercel/python" },
+    { "src": "web/index.html", "use": "@vercel/static" },
+    { "src": "web/leaderboard.html", "use": "@vercel/static" },
     { "src": "public/**", "use": "@vercel/static" },
     { "src": "web/meta_client.js", "use": "@vercel/static" },
     { "src": "web/baked_yours.json", "use": "@vercel/static" },
@@ -13,12 +15,12 @@
     { "src": "/ask", "dest": "api/ask.py" },
     { "src": "/leaderboard/results.json", "dest": "/public/leaderboard/results.json" },
     { "src": "/leaderboard/results", "dest": "api/leaderboard_results.py" },
-    { "src": "/leaderboard", "dest": "/public/leaderboard.html" },
+    { "src": "/leaderboard", "dest": "/web/leaderboard.html" },
     { "src": "/meta_client.js", "dest": "/web/meta_client.js" },
     { "src": "/baked_yours.json", "dest": "/web/baked_yours.json" },
     { "src": "/baked_benchmarks.json", "dest": "/web/baked_benchmarks.json" },
     { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
+    { "src": "/(.*)", "dest": "/web/index.html" }
   ],
   "headers": [
     {
