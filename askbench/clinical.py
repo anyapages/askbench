@@ -163,11 +163,16 @@ def absolute_risk_for_combination(rows, baseline_per_1000: float) -> dict:
 # ---------------------------------------------------------------------------
 
 _BCG_TERMS = re.compile(
-    r"\b(bcg|tuberculosis|tb\b|vaccine|trial|heterogen|pool|meta|efficacy|"
+    r"\b(bcg|bgc|tuberculosis|tb\b|vaccine|trial|heterogen|pool|meta|efficacy|"
     r"prevent|effect|colditz|latitude)\b",
     re.I,
 )
 _GENE_TERMS = re.compile(r"\b(gene|knockout|perturb|screen|crispr|ko_)\b", re.I)
+_INFO = re.compile(r"^\s*what\s+(is|are|was)\b", re.I)
+
+
+def _normalize_bcg_question(question: str) -> str:
+    return re.sub(r"\bbgc\b", "BCG", question, flags=re.I)
 _GREETING = re.compile(
     r"^\s*(hi|hello|hey|hiya|yo|sup|test|thanks?|ok|help)\b[\s!.?]*$",
     re.I,
@@ -183,11 +188,17 @@ def clinical_question_guard(question: str, data: MetaData) -> str | None:
     """Refuse vague or off-dataset questions on the fixed real BCG tab."""
     if not _is_real_bcg(data):
         return None
-    q = question.strip()
+    q = _normalize_bcg_question(question.strip())
     if _GENE_TERMS.search(q):
         return (
             "This tab is the BCG tuberculosis trials only — no gene screen. "
             "Switch to Single-cell screen for GENE7, or tap a BCG example below."
+        )
+    if _INFO.search(q) and _BCG_TERMS.search(q):
+        return (
+            "BCG is bacille Calmette-Guérin, a tuberculosis vaccine. "
+            "This tab runs a statistical panel on 13 published trials — "
+            "tap an example below to see whether pooling is trustworthy."
         )
     if len(q) < 8 or _GREETING.match(q):
         return "Tap one of the BCG examples below — this tab only runs the 13 published trials."

@@ -34,9 +34,16 @@ def test_bcg_guard_rejects_gene_question():
     assert msg and "Single-cell" in msg
 
 
+def test_bcg_guard_what_is_bgc_typo():
+    data, _ = make_bcg_meta()
+    msg = clinical_question_guard("what is bgc", data)
+    assert msg and "Calmette" in msg
+
+
 if __name__ == "__main__":
     test_bcg_guard_rejects_hi()
     test_bcg_guard_accepts_efficacy_question()
     test_bcg_guard_rejects_gene_question()
+    test_bcg_guard_what_is_bgc_typo()
     test_bcg_answer_varies_by_question_focus()
     print("bcg guard tests passed")

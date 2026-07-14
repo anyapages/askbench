@@ -702,8 +702,8 @@
           The toolkit computes; the Skeptic refuses when checks fail.
         </p>
         <p class="trust-strip">
-          Measured over 200 seeds · 1.58% false-positive rate after Benjamini-Hochberg FDR ·
-          refuses when the statistics do not hold.
+          Reproducible offline: <code>ASKBENCH_STUB_LLM=1 python3 web/server.py</code> (no API key).
+          Measured over 200 seeds · 1.58% false-positive rate after Benjamini-Hochberg FDR.
         </p>
       </details>
       <h2 id="dataH2">Data</h2>
@@ -1312,13 +1312,31 @@
     }
   }
 
-  var _bcgQ = /\b(bcg|tuberculosis|tb|vaccine|trial|heterogen|pool|meta|efficacy|prevent|effect|colditz)\b/i;
+  var _bcgQ = /\b(bcg|bgc|tuberculosis|tb|vaccine|trial|heterogen|pool|meta|efficacy|prevent|effect|colditz)\b/i;
+
+  function normalizeQuestion(text) {
+    return String(text || "").replace(/\bbgc\b/gi, "BCG");
+  }
+
+  function clientBcgGuard(question) {
+    if (currentMode !== "clinical_real") return null;
+    var q = normalizeQuestion(question).trim();
+    if (/^\s*what\s+(is|are|was)\b/i.test(q) && _bcgQ.test(q)) {
+      return "BCG is bacille Calmette-Guérin, a tuberculosis vaccine. This tab analyses 13 published trials — tap an example below to see the panel verdict.";
+    }
+    return null;
+  }
+
+  function bcgDefaultQuestion() {
+    var chip = chipsEl.querySelector(".chip");
+    return chip ? chip.textContent.trim() : "Does BCG vaccine prevent tuberculosis across trials?";
+  }
 
   function bcgBakedFor(question) {
     var d = Object.assign({}, BAKED_BCG);
     d.question = question;
     d.narration = "offline";
-    var q = question.toLowerCase();
+    var q = normalizeQuestion(question).toLowerCase();
     if (/heterogen|pool|trustworthy|one number/.test(q)) {
       d.vetted_answer = "The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I²=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it.";
     } else if (/prevent|efficacy|tuberculosis|effect/.test(q)) {
@@ -1328,16 +1346,22 @@
   }
 
   function tryBakedFallback(question) {
-    if (currentMode === "clinical_real" && _bcgQ.test(question)) {
-      render(bcgBakedFor(question), { live: false, cached: true });
-      showNotice("Server was slow — showing the cached real-data verdict (same numbers as python3 real_data.py).");
-      return true;
-    }
-    return false;
+    if (currentMode !== "clinical_real") return false;
+    var q = normalizeQuestion(question);
+    var useQ = _bcgQ.test(q) ? question : bcgDefaultQuestion();
+    render(bcgBakedFor(useQ), { live: false, cached: true });
+    showNotice("Server was slow — showing the cached real-data verdict (same numbers as python3 real_data.py).");
+    return true;
   }
 
   function runAsk(question, attempt) {
     attempt = attempt || 0;
+    question = normalizeQuestion(question);
+    var guardMsg = clientBcgGuard(question);
+    if (guardMsg) {
+      renderClarification(guardMsg, question);
+      return;
+    }
     setBusy(true);
     var ctrl = new AbortController();
     var askTimer = setTimeout(function () { ctrl.abort(); }, attempt === 0 ? 35000 : 55000);
