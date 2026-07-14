@@ -373,8 +373,8 @@
     font-variant-numeric: tabular-nums lining-nums; }
   .refusal-implied b { color: var(--flag); font-weight: 600; }
 
-  /* "How we measure this": the operating-characteristic proof, always visible so
-     a reviewer sees it without running Python. */
+  /* "How we measure this": the operating-characteristic proof, always visible
+     without running Python. */
   .measure { margin-top: 40px; padding-top: 34px; border-top: 1px solid var(--border); }
   .measure h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
   .measure .lede { font-size: 14.5px; }
@@ -1223,8 +1223,7 @@
     e.preventDefault();
     var question = q.value.trim();
     if (!question) {
-      // A juror who just taps the button should still get a verdict card:
-      // fall back to the visible placeholder, or the first "Try" example.
+      // Empty submit: fall back to the visible placeholder or the first example chip.
       var firstChip = chipsEl.querySelector(".chip");
       question = (q.placeholder || "").trim() ||
                  (firstChip ? firstChip.textContent.trim() : "");
