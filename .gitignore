@@ -16,6 +16,7 @@ venv/
 node_modules/
 public/
 .vercel
+logs/
 
 # local vercel project backup, not for the repo
 .vercel_aqta_backup/

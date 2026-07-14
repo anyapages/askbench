@@ -16,6 +16,7 @@ correct with or without a model. Claude is used only to interpret and explain.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 
 
@@ -161,6 +162,66 @@ def absolute_risk_for_combination(rows, baseline_per_1000: float) -> dict:
 # The panel (mirrors agents.lab_meeting, over meta-analysis data)
 # ---------------------------------------------------------------------------
 
+_BCG_TERMS = re.compile(
+    r"\b(bcg|tuberculosis|tb\b|vaccine|trial|heterogen|pool|meta|efficacy|"
+    r"prevent|effect|colditz|latitude)\b",
+    re.I,
+)
+_GREETING = re.compile(
+    r"^\s*(hi|hello|hey|hiya|yo|sup|test|thanks?|ok|help)\b[\s!.?]*$",
+    re.I,
+)
+
+
+def _is_real_bcg(data: MetaData) -> bool:
+    src = getattr(data, "source", None) or ""
+    return "bcg" in src.lower() or "colditz" in src.lower()
+
+
+def clinical_question_guard(question: str, data: MetaData) -> str | None:
+    """Refuse vague or off-dataset questions on the fixed real BCG tab."""
+    if not _is_real_bcg(data):
+        return None
+    q = question.strip()
+    if len(q) < 8 or _GREETING.match(q):
+        return (
+            "This tab runs one fixed dataset: 13 published BCG tuberculosis trials. "
+            "Try a question about BCG efficacy, pooling, or heterogeneity, or pick "
+            "an example below."
+        )
+    if not _BCG_TERMS.search(q):
+        return (
+            "This tab is fixed to the published BCG tuberculosis trials. "
+            "Ask about BCG efficacy, heterogeneity, or whether the pooled effect is "
+            "trustworthy, or switch to Clinical meta-analysis for maternal VTE factors."
+        )
+    return None
+
+
+def _bcg_focused_answer(question: str, vetted: list, data: MetaData) -> str | None:
+    """One real dataset, one factor: shape the headline to match the question asked."""
+    if not _is_real_bcg(data) or len(vetted) != 1:
+        return None
+    h = vetted[0]
+    if h.get("verdict") != "flagged":
+        return None
+    q = question.lower()
+    if re.search(r"heterogen|i²|i2|varies|population|pool|trustworthy|one number", q):
+        return (
+            f"The panel does not report a single pooled estimate for {h['factor']}: "
+            f"its effect varies too much across populations (I²={h['i2']}%) to trust "
+            f"as one number. Pooling here would hide the disagreement, not resolve it."
+        )
+    if re.search(r"prevent|efficacy|effect|work|reduce|tuberculosis", q):
+        return (
+            f"Pooled across {h['k']} trials, {h['factor']} associates with tuberculosis "
+            f"risk ratio {h['rr']} (95% CI {h['ci_low']} to {h['ci_high']}). "
+            f"The panel still does not treat that as one trustworthy number: "
+            f"I²={h['i2']}% is too high to pool honestly."
+        )
+    return None
+
+
 def clinical_analyst(question: str, data: MetaData) -> dict:
     return {"question": question, "outcome": data.outcome,
             "ranked": rank_factors_by_pooled_effect(data)}
@@ -271,6 +332,9 @@ def clinical_refusal(vetted, data: MetaData) -> dict | None:
 
 def clinical_lab_meeting(question: str, data: MetaData, llm=None) -> dict:
     """Run the full clinical panel and return a vetted finding."""
+    guard = clinical_question_guard(question, data)
+    if guard:
+        return {"error": guard, "question": question.strip()}
     from .agents import make_llm
     llm = llm or make_llm()
     finding = clinical_analyst(question, data)
@@ -280,7 +344,7 @@ def clinical_lab_meeting(question: str, data: MetaData, llm=None) -> dict:
     from .debate import panel_debate
     caption, methods = forest_caption(data.outcome, vetted,
                                       source=getattr(data, "source", None))
-    answer = clinical_synthesize(vetted, data)
+    answer = _bcg_focused_answer(question, vetted, data) or clinical_synthesize(vetted, data)
     return {
         "question": question,
         "outcome": data.outcome,

@@ -21,6 +21,7 @@ import askbench  # noqa: E402,F401  side effect: loads .env -> ANTHROPIC_API_KEY
 from askbench.data import make_synthetic
 from askbench.agents import lab_meeting, make_llm
 from askbench.clinical import make_synthetic_vte, clinical_lab_meeting, make_bcg_meta
+from askbench.prompt_log import log_prompt
 
 import json
 import os
@@ -162,10 +163,9 @@ def ask():
     if not question:
         return jsonify({"error": "Please enter a question."}), 400
 
-    # Client IP for the per-IP rate limit; behind Render's proxy the real client
-    # is the first entry of X-Forwarded-For.
     fwd = request.headers.get("X-Forwarded-For", "")
     ip = fwd.split(",")[0].strip() if fwd else (request.remote_addr or "unknown")
+    log_prompt(question, mode, ip)
     chosen_llm, narration = _pick_llm(ip)
 
     try:
