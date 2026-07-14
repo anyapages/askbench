@@ -129,24 +129,138 @@
   .modes-hint {
     font-size: 13px; color: var(--text-faint); margin: 0 0 10px; line-height: 1.45;
   }
-  .csv-panel {
-    margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--border);
-    border-radius: 12px; background: var(--panel-2);
+  .mode-groups { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .mode-primary .mode-pill {
+    width: 100%; text-align: left; padding: 11px 14px; font-size: 14px;
+    border: 1px solid var(--border);
   }
-  .csv-panel label {
-    display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-    text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px;
+  .mode-primary .mode-pill[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
-  .csv-panel textarea {
-    width: 100%; min-height: 108px; resize: vertical; font-family: var(--mono);
-    font-size: 12px; line-height: 1.45; padding: 10px 12px; border-radius: 9px;
-    border: 1px solid var(--border); background: var(--panel); color: var(--text);
+  .mode-bench {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 4px 2px 0;
+  }
+  .bench-label {
+    font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-faint); font-weight: 600; margin-right: 4px;
+  }
+  .mode-bench .mode-pill { font-size: 12.5px; padding: 7px 12px; }
+  .mode-context { margin-bottom: 14px; }
+  .mode-context-title {
+    margin: 0 0 4px; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; color: var(--text);
+  }
+  .mode-context-lede {
+    margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-dim); max-width: 62ch;
+  }
+  .data-card {
+    margin-bottom: 14px; padding: 16px 16px 14px; border: 1px solid var(--border);
+    border-radius: 14px; background: var(--panel);
+  }
+  .data-card-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    margin-bottom: 10px;
+  }
+  .data-step {
+    margin: 0 0 2px; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+  }
+  .data-title { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+  .data-status {
+    flex: 0 0 auto; font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 5px 9px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--panel-2); color: var(--text-faint); white-space: nowrap;
+  }
+  .data-status.ok { color: var(--solid); border-color: var(--solid-bd); background: var(--solid-bg); }
+  .data-status.warn { color: var(--flag); border-color: var(--flag-bd); background: var(--flag-bg); }
+  .data-card textarea {
+    width: 100%; min-height: 120px; resize: vertical; font-family: var(--mono);
+    font-size: 12px; line-height: 1.5; padding: 11px 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg-soft); color: var(--text);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .data-card textarea:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+    background: var(--panel);
+  }
+  .data-meta-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px;
+  }
+  .data-meta-row label {
+    font-size: 12px; font-weight: 600; color: var(--text-dim);
   }
   .csv-outcome {
-    margin-top: 8px; width: 100%; max-width: 320px; font-size: 13px; padding: 8px 10px;
+    flex: 1; min-width: 160px; max-width: 280px; font-size: 13px; padding: 8px 10px;
     border-radius: 9px; border: 1px solid var(--border); background: var(--panel); color: var(--text);
   }
-  .csv-hint { font-size: 12px; color: var(--text-faint); margin: 8px 0 0; line-height: 1.45; }
+  .text-btn {
+    appearance: none; border: 0; background: transparent; color: var(--text-dim);
+    font-family: var(--sans); font-size: 12.5px; font-weight: 600; cursor: pointer;
+    padding: 6px 4px; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .text-btn:hover { color: var(--accent); }
+  .data-help { margin-top: 8px; }
+  .data-help summary {
+    cursor: pointer; font-size: 12px; color: var(--text-faint); font-weight: 600;
+  }
+  .data-help p { margin: 8px 0 0; font-size: 12px; color: var(--text-faint); line-height: 1.5; }
+  .ask-label {
+    margin: 0 0 8px; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+  }
+  .chip.selected {
+    border-color: var(--accent); color: var(--accent); background: var(--accent-soft);
+  }
+  button.primary.ready {
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    animation: readyPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes readyPulse {
+    0%, 100% { box-shadow: 0 0 0 4px var(--accent-soft); }
+    50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+  }
+  .onboarding {
+    margin-top: 8px; padding: 28px 24px; border: 1px dashed var(--border);
+    border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, var(--bg-soft));
+    text-align: center;
+  }
+  .onboarding.hide { display: none; }
+  .onboarding h2 {
+    margin: 0 0 8px; font-size: 18px; font-weight: 600; letter-spacing: -0.02em;
+  }
+  .onboarding p { margin: 0 auto 18px; max-width: 48ch; font-size: 14px; color: var(--text-dim); line-height: 1.55; }
+  .onboard-steps {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+    margin: 0 0 18px; text-align: left;
+  }
+  .onboard-step {
+    padding: 12px 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel);
+  }
+  .onboard-step b {
+    display: block; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-faint); margin-bottom: 4px;
+  }
+  .onboard-step span { font-size: 13px; color: var(--text-dim); line-height: 1.45; }
+  .onboard-cta {
+    appearance: none; border: 0; background: var(--accent); color: var(--on-accent);
+    font-family: var(--sans); font-size: 14px; font-weight: 600; padding: 11px 18px;
+    border-radius: 10px; cursor: pointer;
+  }
+  .onboard-cta:hover { filter: brightness(1.06); }
+  .results-skeleton { display: none; margin-top: 4px; }
+  .results-skeleton.show { display: block; }
+  .skel-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 12px;
+  }
+  .skel-line {
+    height: 12px; border-radius: 6px; margin-bottom: 10px;
+    background: linear-gradient(90deg, var(--panel-2), var(--border), var(--panel-2));
+    background-size: 200% 100%; animation: shimmer 1.2s linear infinite;
+  }
+  .skel-line.w80 { width: 80%; } .skel-line.w60 { width: 60%; } .skel-line.w40 { width: 40%; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .product-tagline {
     font-size: 26px; color: var(--text); margin: 0 0 10px; font-weight: 600;
     letter-spacing: -0.02em; line-height: 1.2;
@@ -233,7 +347,7 @@
     border: 1px solid var(--border); border-radius: 14px;
     box-shadow: 0 10px 28px -18px rgba(16, 24, 40, 0.18);
   }
-  .ask-panel .modes { margin-top: 0; margin-bottom: 12px; flex-wrap: wrap; max-width: 100%; }
+  .ask-panel .mode-groups { margin-top: 0; margin-bottom: 0; }
   .ask-panel .ask { margin-top: 0; }
   .ask-panel .chips { margin-top: 10px; }
   .ask-panel .thinking { margin-top: 14px; }
@@ -523,6 +637,7 @@
   @media (max-width: 720px) {
     .proof-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .wl-sum { display: none; }
+    .onboard-steps { grid-template-columns: 1fr; }
   }
   @media (max-width: 560px) {
     .topbar { padding: 10px 16px; }
@@ -530,8 +645,8 @@
     h1.product-tagline { font-size: 22px; }
     .proof-strip { grid-template-columns: 1fr 1fr; }
     .ask-panel { top: 44px; padding: 12px 12px 10px; }
-    .modes { width: 100%; }
-    .mode-pill { flex: 1; }
+    .mode-bench { width: 100%; }
+    .mode-bench .mode-pill { flex: 1; min-width: 0; }
     .ask { flex-direction: column; align-items: stretch; padding: 12px; }
     /* Stacked layout: hold two lines of placeholder so a wrapping question
        ("...across trials?") is never clipped behind the full-width button. */
@@ -597,7 +712,7 @@
         toolkit, never the model.
       </p>
       <div class="dash-title-row">
-        <p class="dash-subtitle" id="h1">BCG trials · 13 published RCTs</p>
+        <p class="dash-subtitle" id="h1">Paste your meta-analysis · ask in plain English</p>
         <div class="dash-links">
           <a href="https://github.com/anyapages/askbench">GitHub</a>
           <span style="opacity:.45"> · </span>
@@ -614,31 +729,54 @@
     </div>
 
     <section class="ask-panel" id="askPanel" aria-label="Ask a new question">
-      <p class="modes-hint" id="modesHint">Paste your meta-analysis table, pick an example question, or type your own.</p>
-      <div class="modes" role="tablist" aria-label="Dataset">
-        <button type="button" class="mode-pill" id="mode-clinical_yours" role="tab"
-                aria-selected="true" data-mode="clinical_yours"><span class="tag real">YOUR DATA</span> Paste table</button>
-        <button type="button" class="mode-pill" id="mode-single_cell" role="tab"
-                aria-selected="false" data-mode="single_cell"><span class="tag syn">SYNTHETIC</span> Single-cell screen</button>
-        <button type="button" class="mode-pill" id="mode-clinical" role="tab"
-                aria-selected="false" data-mode="clinical"><span class="tag syn">SYNTHETIC</span> Clinical meta-analysis</button>
-        <button type="button" class="mode-pill" id="mode-clinical_real" role="tab"
-                aria-selected="false" data-mode="clinical_real"><span class="tag real">● REAL DATA</span> BCG trials</button>
+      <div class="mode-groups">
+        <div class="mode-primary">
+          <button type="button" class="mode-pill" id="mode-clinical_yours" role="tab"
+                  aria-selected="true" data-mode="clinical_yours"><span class="tag real">YOUR DATA</span> Paste your study table</button>
+        </div>
+        <div class="mode-bench" role="tablist" aria-label="Benchmark datasets">
+          <span class="bench-label">Or try</span>
+          <button type="button" class="mode-pill" id="mode-clinical_real" role="tab"
+                  aria-selected="false" data-mode="clinical_real"><span class="tag real">REAL</span> BCG trials</button>
+          <button type="button" class="mode-pill" id="mode-clinical" role="tab"
+                  aria-selected="false" data-mode="clinical"><span class="tag syn">SYNTH</span> VTE meta-analysis</button>
+          <button type="button" class="mode-pill" id="mode-single_cell" role="tab"
+                  aria-selected="false" data-mode="single_cell"><span class="tag syn">SYNTH</span> Single-cell</button>
+        </div>
       </div>
 
-      <div class="csv-panel" id="csvPanel">
-        <label for="csvIn">Your meta-analysis table (CSV)</label>
-        <textarea id="csvIn" spellcheck="false" autocomplete="off"></textarea>
-        <input class="csv-outcome" id="outcomeIn" type="text" placeholder="Outcome name (e.g. relapse)" autocomplete="off" />
-        <p class="csv-hint">Columns: <code>factor</code>, <code>log_rr</code>, <code>se</code>, <code>n</code> — or <code>factor</code>, <code>rr</code>, <code>se</code>, <code>n</code> — optional <code>study</code> / <code>population</code> column.</p>
+      <div class="mode-context" id="modeContext">
+        <p class="mode-context-title" id="modeTitle">Your meta-analysis table</p>
+        <p class="mode-context-lede" id="modeLede">Paste per-study estimates. The panel pools each factor, flags thin or heterogeneous evidence, and refuses when one combined number would mislead.</p>
       </div>
 
+      <div class="data-card" id="csvPanel">
+        <div class="data-card-head">
+          <div>
+            <p class="data-step">Step 1</p>
+            <p class="data-title">Per-study estimates (CSV)</p>
+          </div>
+          <span class="data-status" id="csvStatus">Checking table…</span>
+        </div>
+        <textarea id="csvIn" spellcheck="false" autocomplete="off" aria-label="Paste CSV table"></textarea>
+        <div class="data-meta-row">
+          <label for="outcomeIn">Outcome</label>
+          <input class="csv-outcome" id="outcomeIn" type="text" placeholder="e.g. relapse" autocomplete="off" />
+          <button type="button" class="text-btn" id="csvExampleBtn">Reset example</button>
+        </div>
+        <details class="data-help">
+          <summary>What columns do I need?</summary>
+          <p>Required: <code>factor</code> plus <code>log_rr</code> and <code>se</code> (or <code>rr</code> with <code>se</code>, or <code>rr</code> with <code>ci_low</code> / <code>ci_high</code>). Optional: <code>study</code> or <code>n</code>. One row per study.</p>
+        </details>
+      </div>
+
+      <p class="ask-label" id="askLabel">Step 2 · Your question</p>
       <form class="ask" id="askForm" autocomplete="off">
         <textarea id="q" rows="1"></textarea>
-        <button type="submit" class="primary" id="askBtn">Ask the panel</button>
+        <button type="submit" class="primary" id="askBtn">Run panel</button>
       </form>
 
-      <div class="chips" id="chips"><span class="label">Try:</span></div>
+      <div class="chips" id="chips"><span class="label">Examples:</span></div>
 
       <div class="thinking" id="thinking" style="display:none">
         <span class="pulse"></span>
@@ -647,6 +785,25 @@
     </section>
 
     <div class="notice" id="notice"></div>
+
+    <section class="onboarding" id="onboarding">
+      <h2>Your panel verdict appears here</h2>
+      <p id="onboardBlurb">The example table is loaded — pick a question below, then hit <strong>Run panel</strong>. Numbers come from your pasted rows, not a fixed benchmark.</p>
+      <div class="onboard-steps">
+        <div class="onboard-step"><b>1 · Table</b><span>Paste or edit your per-study CSV. Green badge means it parsed.</span></div>
+        <div class="onboard-step"><b>2 · Question</b><span>Ask in plain English — heterogeneity, ranking, or whether to pool.</span></div>
+        <div class="onboard-step"><b>3 · Verdict</b><span>Toolkit computes; Skeptic flags; model only narrates what survived.</span></div>
+      </div>
+      <button type="button" class="onboard-cta" id="runExampleBtn">Run the example question</button>
+    </section>
+
+    <section class="results-skeleton" id="resultsSkeleton" aria-hidden="true">
+      <div class="skel-card">
+        <div class="skel-line w40"></div>
+        <div class="skel-line w80"></div>
+        <div class="skel-line w60"></div>
+      </div>
+    </section>
 
     <section class="results" id="results" aria-live="polite">
       <div class="verdict-card">
@@ -841,15 +998,108 @@
   var metaEl = document.getElementById("metaCounts");
   var liveBadge = document.getElementById("liveBadge");
   var h1El = document.getElementById("h1");
-  var ledeEl = document.getElementById("lede");
+  var modeTitleEl = document.getElementById("modeTitle");
+  var modeLedeEl = document.getElementById("modeLede");
+  var askLabelEl = document.getElementById("askLabel");
   var chipsEl = document.getElementById("chips");
-  var modesHint = document.getElementById("modesHint");
   var csvPanel = document.getElementById("csvPanel");
   var csvIn = document.getElementById("csvIn");
+  var csvStatus = document.getElementById("csvStatus");
+  var csvExampleBtn = document.getElementById("csvExampleBtn");
   var outcomeIn = document.getElementById("outcomeIn");
+  var onboarding = document.getElementById("onboarding");
+  var onboardBlurb = document.getElementById("onboardBlurb");
+  var runExampleBtn = document.getElementById("runExampleBtn");
+  var resultsSkeleton = document.getElementById("resultsSkeleton");
   var worklistBody = document.getElementById("worklistBody");
 
   var EXAMPLE_CSV = "factor,study,log_rr,se,n\n" +
+    "intervention,Alpha trial,-0.7,0.2,500\n" +
+    "intervention,Beta trial,0.1,0.18,400\n" +
+    "intervention,Gamma trial,-0.9,0.25,600\n" +
+    "placebo_arm,Study A,0.05,0.12,300";
+
+  function normHeader(h) {
+    return h.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  }
+
+  function clientParseCsv(text) {
+    text = (text || "").trim();
+    if (!text) return { ok: false, msg: "Paste your table" };
+    var lines = text.split(/\r?\n/).filter(function (l) { return l.trim(); });
+    if (lines.length < 2) return { ok: false, msg: "Need header + rows" };
+    var headers = lines[0].split(",").map(normHeader);
+    function col() {
+      var names = Array.prototype.slice.call(arguments);
+      for (var i = 0; i < headers.length; i++) {
+        for (var j = 0; j < names.length; j++) {
+          if (headers[i] === names[j]) return i;
+        }
+      }
+      return -1;
+    }
+    var fi = col("factor", "risk_factor", "exposure", "treatment");
+    if (fi < 0) return { ok: false, msg: "Missing factor column" };
+    var hasLog = col("log_rr", "logrr", "ln_rr") >= 0;
+    var hasRr = col("rr", "risk_ratio") >= 0;
+    var hasSe = col("se", "stderr", "standard_error") >= 0;
+    var hasCi = col("rr", "risk_ratio") >= 0 && col("ci_low", "ci_lower", "lower") >= 0 &&
+                col("ci_high", "ci_upper", "upper") >= 0;
+    if (!hasLog && !hasRr) return { ok: false, msg: "Add log_rr or rr" };
+    if (!hasSe && !hasCi) return { ok: false, msg: "Add se or CI columns" };
+    var factors = {};
+    var rows = 0;
+    for (var r = 1; r < lines.length; r++) {
+      var cells = lines[r].split(",");
+      var factor = (cells[fi] || "").trim();
+      if (!factor) continue;
+      rows++;
+      factors[factor] = true;
+    }
+    if (!rows) return { ok: false, msg: "No study rows found" };
+    var fn = Object.keys(factors);
+    return {
+      ok: true,
+      rows: rows,
+      factors: fn.length,
+      msg: rows + " studies · " + fn.length + " factor" + (fn.length === 1 ? "" : "s")
+    };
+  }
+
+  function updateCsvStatus() {
+    if (!csvStatus || !csvIn) return null;
+    var parsed = clientParseCsv(csvIn.value);
+    csvStatus.textContent = parsed.msg;
+    csvStatus.className = "data-status" + (parsed.ok ? " ok" : " warn");
+    return parsed;
+  }
+
+  function setOnboarding(show) {
+    if (onboarding) onboarding.classList.toggle("hide", !show);
+  }
+
+  function setSkeleton(show) {
+    if (resultsSkeleton) resultsSkeleton.classList.toggle("show", !!show);
+  }
+
+  function clearChipSelection() {
+    chipsEl.querySelectorAll(".chip").forEach(function (c) { c.classList.remove("selected"); });
+    askBtn.classList.remove("ready");
+  }
+
+  function selectChip(btn) {
+    clearChipSelection();
+    if (btn) {
+      btn.classList.add("selected");
+      askBtn.classList.add("ready");
+    }
+  }
+
+  function fillExampleCsv() {
+    if (csvIn) csvIn.value = EXAMPLE_CSV;
+    if (outcomeIn && !outcomeIn.value.trim()) outcomeIn.value = "relapse";
+    updateCsvStatus();
+  }
     "intervention,Alpha trial,-0.7,0.2,500\n" +
     "intervention,Beta trial,0.1,0.18,400\n" +
     "intervention,Gamma trial,-0.9,0.25,600\n" +
@@ -987,11 +1237,8 @@
   var MODES = {
     single_cell: {
       h1: "Single-cell screen · Perturb-seq",
-      lede: "You ran a CRISPR screen and want to know which knockouts really move your readout " +
-            "gene. A panel of agents runs the analysis on a tested toolkit, a skeptic attacks " +
-            "it with statistical checks, and only vetted findings come back. Effects, " +
-            "p-values and cell counts are computed deterministically, so the answer holds " +
-            "with or without the model.",
+      lede: "Which knockouts really move your readout? The toolkit computes effects and p-values; the Skeptic flags what cannot be trusted.",
+      onboard: "Synthetic Perturb-seq benchmark. Pick an example, then <strong>Run panel</strong>.",
       placeholder: "Which knockouts most raise GENE7?",
       chips: [
         "Which knockouts most raise GENE7?",
@@ -1015,10 +1262,8 @@
     },
     clinical: {
       h1: "Clinical meta-analysis · synthetic VTE",
-      lede: "The same panel, over pooled study data. It pools each risk factor with " +
-            "random-effects meta-analysis, a skeptic flags heterogeneity, thin evidence " +
-            "and non-significance, and only vetted factors enter the answer. The pooling, " +
-            "confidence intervals and I² are computed deterministically.",
+      lede: "Pooled risk factors with random-effects meta-analysis. The Skeptic flags heterogeneity, thin evidence, and non-significance before anything reaches the answer.",
+      onboard: "Synthetic VTE benchmark with planted traps. Pick an example, then <strong>Run panel</strong>.",
       placeholder: "Which combination of maternal risk factors contributes most to absolute VTE risk across populations?",
       chips: [
         "Which combination of maternal risk factors contributes most to absolute VTE risk across populations?",
@@ -1046,9 +1291,8 @@
   // REAL published data: reuses the clinical table schema with different framing.
   MODES.clinical_real = {
     h1: "BCG trials · 13 published RCTs",
-    lede: "One fixed real dataset: 13 BCG tuberculosis trials (Colditz et al., JAMA 1994). " +
-          "The statistics are the same every time; your question shapes the headline and " +
-          "panel discussion. Try the examples, or ask about efficacy, pooling, or heterogeneity.",
+    lede: "Fixed real data (Colditz 1994). Pooling and I² are identical every run; your question shapes the headline.",
+    onboard: "Tap an example — cached BCG verdict loads instantly. Live asks may take ~30s on first hit while the server wakes.",
     placeholder: "Does BCG vaccine prevent tuberculosis across trials?",
     chips: [
       "Does BCG vaccine prevent tuberculosis across trials?",
@@ -1061,15 +1305,14 @@
   };
 
   MODES.clinical_yours = {
-    h1: "Your data · paste meta-analysis table",
-    lede: "Paste a CSV summary of your per-study estimates. The panel pools each factor with " +
-          "random-effects meta-analysis, flags heterogeneity and thin evidence, and refuses when " +
-          "a single number would mislead. Pooling runs on your pasted rows — not fixed benchmark data.",
-    placeholder: "Which factors in my table are too heterogeneous to pool?",
+    h1: "Your meta-analysis table",
+    lede: "Paste per-study estimates. The panel pools each factor, flags thin or heterogeneous evidence, and refuses when one combined number would mislead.",
+    onboard: "The example table is loaded — pick a question, then <strong>Run panel</strong>. Numbers come from your pasted rows, not a fixed benchmark.",
+    placeholder: "Which factors are too heterogeneous to pool?",
     chips: [
-      "Which factors in my table are too heterogeneous to pool?",
-      "What is the strongest pooled effect in my data?",
-      "Is any factor safe to report as one combined number?"
+      "Which factors are too heterogeneous to pool?",
+      "What is the strongest pooled effect?",
+      "Is any factor safe to report as one number?"
     ],
     target: MODES.clinical.target,
     columns: MODES.clinical.columns,
@@ -1082,22 +1325,30 @@
     opts = opts || {};
     currentMode = mode in MODES ? mode : "clinical_yours";
     var m = MODES[currentMode];
-    h1El.textContent = m.h1;
-    ledeEl.textContent = m.lede;
+    if (h1El) h1El.textContent = m.h1;
+    if (modeTitleEl) modeTitleEl.textContent = m.h1;
+    if (modeLedeEl) modeLedeEl.textContent = m.lede;
+    if (askLabelEl) {
+      askLabelEl.textContent = currentMode === "clinical_yours"
+        ? "Step 2 · Your question" : "Your question";
+    }
+    if (onboardBlurb) {
+      onboardBlurb.innerHTML = m.onboard ||
+        "Pick an example, then <strong>Run panel</strong>.";
+    }
     q.placeholder = m.placeholder;
     if (!opts.keepQuestion) {
       q.value = "";
       autogrow();
+      clearChipSelection();
     }
 
-    // toggle pill state
     document.querySelectorAll(".mode-pill").forEach(function (p) {
       p.setAttribute("aria-selected", p.getAttribute("data-mode") === currentMode
         ? "true" : "false");
     });
 
-    // rebuild example chips
-    chipsEl.innerHTML = '<span class="label">Try:</span>';
+    chipsEl.innerHTML = '<span class="label">Examples:</span>';
     m.chips.forEach(function (text) {
       var b = document.createElement("button");
       b.type = "button";
@@ -1107,16 +1358,19 @@
     });
 
     if (csvPanel) csvPanel.hidden = currentMode !== "clinical_yours";
-    if (modesHint) {
-      modesHint.textContent = currentMode === "clinical_yours"
-        ? "Paste your meta-analysis table, pick an example question, or type your own."
-        : "Three benchmark datasets — pick one, tap an example, or type a question.";
-    }
+    if (currentMode === "clinical_yours") updateCsvStatus();
 
     if (!opts.keepResults) {
       results.classList.remove("show");
       notice.classList.remove("show");
       rowsEl.innerHTML = "";
+      setSkeleton(false);
+      if (currentMode === "clinical_real" && typeof BAKED_BCG !== "undefined") {
+        setOnboarding(false);
+        render(BAKED_BCG, { live: false, cached: true });
+      } else {
+        setOnboarding(true);
+      }
     }
     if (!opts.skipFocus) q.focus();
   }
@@ -1137,21 +1391,43 @@
   });
 
   // mode pills
-  document.querySelector(".modes").addEventListener("click", function (e) {
+  document.querySelector(".mode-groups").addEventListener("click", function (e) {
     var t = e.target.closest(".mode-pill");
     if (t) applyMode(t.getAttribute("data-mode"));
   });
 
-  // example chips
+  if (csvIn) {
+    csvIn.addEventListener("input", updateCsvStatus);
+  }
+  if (csvExampleBtn) {
+    csvExampleBtn.addEventListener("click", function () {
+      fillExampleCsv();
+      showNotice("Example table restored.");
+    });
+  }
+
+  // example chips — fill question, don't auto-fire (avoids cold-start surprise)
   chipsEl.addEventListener("click", function (e) {
     var t = e.target;
     if (t.classList.contains("chip")) {
       q.value = t.textContent.trim();
       autogrow();
+      selectChip(t);
       q.focus();
-      form.requestSubmit();
     }
   });
+
+  if (runExampleBtn) {
+    runExampleBtn.addEventListener("click", function () {
+      var chip = chipsEl.querySelector(".chip");
+      if (chip) {
+        q.value = chip.textContent.trim();
+        autogrow();
+        selectChip(chip);
+      }
+      form.requestSubmit();
+    });
+  }
 
   var thinkingMsg = document.getElementById("thinkingMsg");
   var thinkTimers = [];
@@ -1163,8 +1439,10 @@
 
   function setBusy(on) {
     askBtn.disabled = on;
-    askBtn.textContent = on ? "Reviewing" : "Ask the panel";
+    askBtn.textContent = on ? "Reviewing…" : "Run panel";
     thinking.style.display = on ? "flex" : "none";
+    setSkeleton(on);
+    if (on) setOnboarding(false);
     clearThinkTimers();
     if (on) {
       notice.classList.remove("show");
@@ -1230,6 +1508,9 @@
 
   function render(data, opts) {
     opts = opts || {};
+    setSkeleton(false);
+    setOnboarding(false);
+    clearChipSelection();
     var m = MODES[currentMode];
     if (verdictTagEl) {
       verdictTagEl.textContent = "Panel verdict";
@@ -1426,8 +1707,16 @@
     setBusy(true);
     if (currentMode === "clinical_yours" && (!csvIn || !csvIn.value.trim())) {
       setBusy(false);
-      renderClarification("Paste a CSV table with your study results (see the example).", question);
+      renderClarification("Paste your per-study table above — the green badge means it parsed.", question);
       return;
+    }
+    if (currentMode === "clinical_yours") {
+      var parsed = updateCsvStatus();
+      if (parsed && !parsed.ok) {
+        setBusy(false);
+        renderClarification(parsed.msg + ". Open “What columns do I need?” for the format.", question);
+        return;
+      }
     }
     var ctrl = new AbortController();
     var askTimer = setTimeout(function () { ctrl.abort(); }, attempt === 0 ? 35000 : 55000);
@@ -1508,8 +1797,7 @@
   // pool it (I2=92.1%), not an empty form behind a cold start. The live form
   // below stays fully functional for real questions.
   var BAKED_BCG = {"question":"Does the BCG vaccine prevent tuberculosis?","outcome":"tuberculosis","findings":[{"k":13,"rr":0.49,"ci_low":0.345,"ci_high":0.695,"i2":92.1,"q":152.284,"tau2":0.3088,"n_total":357347,"significant":true,"factor":"BCG vaccination","flags":["high heterogeneity (I\u00b2=92.1%); the effect varies too much across populations to trust as one pooled number"],"verdict":"flagged","context":null}],"vetted_answer":"No single factor passes the panel's checks cleanly. The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I\u00b2=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it.","debate":[{"agent":"Analyst","text":"I ranked every candidate and brought the strongest forward: BCG vaccination."},{"agent":"Skeptic","text":"I am not signing off on all of them. BCG vaccination: high heterogeneity (I\u00b2=92.1%); the effect varies too much across populations to trust as one pooled number."},{"agent":"Contextualist","text":"Nothing survived cleanly, so I would not commit to a mechanism yet."},{"agent":"Chair","text":"No single factor passes the panel's checks cleanly. The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I\u00b2=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it."}],"refusal":null,"figure":"data:image/png;base64,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1q9fP/dDT71CSUlJdvTRR1vTpk1t1KhRObpuXI8AIG/68ccf3b3+v3LsscdGfE69evWSPVcuu+wymzZtmpuO0vPpp5/atm3brFmzZpabxOf0CgBAqJkzZ9pLL73kfiwHAgHLLUV7ND4uM1S0R69VA0BFejTGburUqa5oj/7H8Pnnn7u5igHkDkrnv/TSS111bqWpNmjQwDXCly9fbtOnT3fL119/fY6tH9cjAMiblixZ4u4rV66c6nOUuRD6XLnrrrtcUPmqq65y9Rg0HOLBBx90//aCEbkFmQsAco0dO3a43rgKFSq4C2Z+LNozdOjQYNZGWrcPP/wwm74tkH+pQnfjxo1dYOHxxx+3VatWuUb3+++/76p6q9eoR48eObqOXI8AIG/aunWru1eQOjW6RsuWLVuCf9NMEQoElyhRwq699lq79957rXnz5vbuu+9abkPmAoBco3v37u6H7oQJE2z06NEZfv3q1att0KBB7geyfvCm1TOpH82PPvpoms8LLdoTKquK9jRs2NAV7dH6HnHEEe6xq6++2s4666x037tSpUpRrQOA6D377LP2+++/W7t27axXr14pHi9SpIiddtppUb0X1yMAQFapUaOGffbZZ5bbEVwAkCt89dVXLuWrdevWbmxZZoILShtTL+PixYtt8ODBFhcXl+I5SjNTOvDSpUutevXq1qpVK8vJoj1KtVbRHm899KPe+2EP4PBRzQENOZCuXbv6fj+uRwCAUMWLF3f327dvt9SojoIoSyEvYlgEgBynC+ltt91m5cqVs759+2b6fdRLWLNmTRs2bJj7cRxeoExVdc877zz3Q/6+++6zG264wXJb0R4AOWPevHn233//WcWKFe24446zn3/+2Z544gkXJFBvvzKqDhw4EPX7cT0CAISqWrWqu1cgNzXeY95z8xoyFwDkOI0fVg/emDFjXAXzzFJwQhkQl1xyiauIvmvXLnefmJhoCxcutEaNGtnatWvdbBTPPfec5caiPX7qVXjTFv3999/u39446DPOOMOqVKni+zOAWLZgwQJ3r1khFEzQDAqhRWV1zahTp46rXZDWee3hesT1CABC6f8hsn79enetjRTsnTNnjrsPHb6Wl5C5ACBHqTr5m2++6XrtVJzGL40fVtGb+vXru5TkK664whUq09Rr+iGvcdTZ/UPeT9GezPr333/tuuuuc7cpU6a4wnPevzV9EYC06cee13Ova0SHDh3ctI+bN29255TGu+oxTfsV7bSNXI+4HgGAR8FrBVhlxIgRFk7/f1DmgoLQGiKcFxFcAJBj9KP99ttvt7Jly7p6C1lFVXX1g1YFyrx7NRz69OnjKsDHIqXPqZc10k0zcABIm5eloMCBhjGouKECChr3qiwDXUuSkpJc1oFmj4gW1yOuRwDgeeSRR9y9/h+g4Xge/X9BQW3p2LFjnq13Q3ABQI7RnOuqlK4f8erhy+qiOZp9wqM0XI2dPlzyQ9EeIJZ456xEulZoSIGyFuSLL77I8HtzPQKA2KHAgGbT8W6qyyPKxg39u2YOCqUsXdXZ0TVXjzdt2tRNL+nV+mnQoIE99dRTlldRcwFAjlGNhfj4eDcNmm6hNB2cvP322+6HfPny5TPUW6jhFi1atHDTtGmM29y5c+3CCy90PYdZHcjIr0V7gFhSrVq1iMuRnhP+YzE9XI8AILZoCNn333+f4u8rVqxwN8/u3btTPOfVV191QYQBAwbYzJkzXcacZgxSvZ8HHnjAEhISLK8iuAAgR+3bt8++/vrrVB9XJXXdMlIAbNy4cdayZUvbv3+/vfvuuy4ifNNNN7liahrr7AUrslN+KNoDxBKdhwUKFHCp+5o1witwGEp/D61PEA2uRwAQe3T9Di36m1EtW7Z0t1jDsAgAOWbTpk2pjstt06aNe45Sw/RvBRiioR/s+vGu14wePdqNnS5UqJCNHDnSWrdubb/88oub/i2tHryskB+K9gCxRA38c889N9VhD+pZ8gKhZ555ZlTvyfUIAJCfEFwAEDO8+eQ11OKTTz6xq6++OvhYXFycDR061Nq1a2d//vmn+0GvKdKyU6wX7QFijWZvkGeffdZmzZqVLMOqc+fO7pqh+gVt27ZN9724HgEA8huGRQCIGZo2rnDhwi4NWeOZwynlWYV29JzBgwe7qeBSG1sdSj/EvR/fsnjxYnev9xo/fnyyGhIVKlRIUbSnX79+rmjPxRdf7KaC+/LLL13WRl4v2gPEGp2jOid79uzpZnVQhoIyGnQNUPaUrh3KOihXrly678X1CACQ3xQI+BksAgDZRNOVvfPOO+7Hbo8ePaJ+3T///BNVfYZonydfffVVxMZBOI1ljlQMTenQKtozf/78YNGem2++Oc8X7QFilQow9u3b1xXr2rp1qwswqDHerVs3O/HEE6N+H65HAID8hOACAAAAAADwhZoLAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAAAAAADAF4ILAABkkaFDh1qBAgXcfXb56quv3Gc8/vjjWfaeer8LLrggU69dunSpe/2tt95qeY22odZd2zQ77dmzx44//ni77LLLsvVz8ruqVau6G7LnmvHyyy9boUKF7Pfff8+ydQMQWwguAADyNP1oDr3FxcVZmTJl7KKLLrIRI0bk9OohxoM90ejXr5/99ddf1rt37xSPrV271u6991479thjLTEx0cqWLWtXX321zZs3L+J7KYgTfsyH3iI1/N577z2rXbu2FStWzE455RR7//33I7631kXnTpcuXXwFUt5++21r1qyZVahQwX2n4sWL22mnnWb333+/LViwIGKAJyuDZcged999tzs+/RwfAGJbfE6vAAAAWaFXr17ufu/eva6B9cknn9i0adNszpw5rscNqfvtt9+sSJEilt907NjRbrjhBqtcuXK2fcb27dvt6aeftsaNG1vdunVTZH2cc845tnr1ajvzzDPtmmuusXXr1tnHH39sEyZMsE8//dQuvfTSiO/bqVMnK1myZIq/KzgQaty4cXbzzTdb/fr1rX379jZp0iRr1aqVa/ArABDqnnvusdKlS9tTTz2Vqe+6aNEia968uTuetB76ztq2Cjj8+uuv9sYbb7hAy9ixY+3KK6/M1Gcg5xQuXNgFiLp162YzZ850xy4AhCK4AACICeE9n19++aVr3PTt29fuu+8+0qXTcOKJJ1p+pAZweGM8qyl7ZtOmTRGHjShAoMCCjk8dp+rBlx49eli9evWsbdu29ueff1rRokVTvFaNvGiO6f/9739uSMaMGTMsPj7eevbs6V43YMCAZMGFDz/80AU1vv76a9eIzChlPVx88cW2YsUKt27PPPNMivf5999/7YknnrCNGzdm+P2ROyhQ1b17d3v99dcJLgBIgWERAICYpIaOGs2BQMBmz54d/PvcuXOtRYsWdtRRR7mU7SpVqliHDh1cIy8S/V09umqQJSQkuLRg9TDrfTJCjS71lFerVs197pFHHul6b0PXLbyxdvvtt1u5cuVcI01p5e+8846voQGfffaZq61wxBFHBBuyqdVc2Lp1q+vBrlWrlpUoUcL1dFevXt2uv/76qL77gQMHXONZ763ttXPnzqhrN6gHXJ+jfVSwYMFgTQR9rt7z1FNPdT3sSUlJruHcuXPnFA1WfR81zkX3oUMH9Fnp1VxQcKpJkybuc7S/atSoYQ8//LBt3rzZMkJDBHTcqEc/1K5du1wWgb6fhkuE7g991m233eaOvY8++sj8+Oeff1zGhAILon2v99ffPRs2bHDHps6Dhg0bZupzFBDRMa6siFdeeSVigEL7U0ENZYscTrt377Y+ffq4oSHK0NHxrO85evToiM/XNePVV1+1k08+2R1jlSpVcttH+z6jdR2++eYbu+KKK+zoo492x1H58uXtrLPOckGWcDt27LDnnnvOBZZ0vmkYy0knneSCT7oeeHR+6FjU83Q98q5j7dq1c/sgI7TvFSzQ52if6fjQtfPzzz+P+PyKFSvaeeed54JRW7ZsydBnAYh9ZC4AAGKWGgniNdzGjx/vAgv6+7XXXut+kKvBqt5dDaNQ767GvnuWLFli5557rq1atcrVcFDDafny5fbBBx+4tHU1/C6//PJ010Pj5y+55BL3Q15p7mps//fffy49XO8/ZsyYZMX+9Jh6Bf/++2/3uG5qaCqtXe+TGWoMKLjQtGlT9z6hjctI200Na6U+n3322XbHHXe4xqkaLhpqoobZ6aefnurr1XC+6aabXE+4AjNKhVcjOhqLFy92KfxqAOs9FJRQY1AGDRrkttX5559vjRo1cgEM7T8Ne1FD/fvvv3eNMlGQQsMGtF+vuuoqF5zxRBpOEOrNN99048uVMXDddde5RrECEGr4aajCt99+m+57iBqjGpZzxhlnpBh2omNBQ3j03t46h1IQygtytG7dOsXj+r5q3KnGyHHHHeeOT287hdKwhPnz57ttpX2g16hxqv3qUeNVDUs1wDND+2j48OHJhielRY3hw0VDMnTOKSNDwUYdj2rE63xQAEvbRlkWofQcXRPUkFaDXcEhDS/54Ycf3D5TUcNo6HxTdoj2iwKJClJov2vYiHr+Q7eVgmMXXnih/fTTT3bCCSe44JI+V+fDkCFD3DVDgUbReaUhJnq+rhN63i+//GJvvfWWOz51zOmz0qNrgIJwCrbpnNY5r2E8uk5qWefBnXfemeJ1DRo0cOfD9OnTo7r+AchHAgAA5GH6X1mk/51NmTIlUKBAAXdbunRpYOvWrYHSpUsHChYsGJg+fXqy5/bp08e9R+PGjZP9/ZJLLnF/7927d7K/f/vtt4G4uDj3fnpfz5AhQ9zzde/Zu3dvoHr16oHExMTAV199lex9Vq5cGahYsWKgfPnygV27dgX/fuedd7r3uf/++5M9f/bs2YH4+Hj3WK9evaLaPt46aTtMmjQp4nP0+Pnnnx/894IFC9zfmjdvnuK5+/fvD2zYsCH47yVLlrjntmnTxv17/fr1gQYNGrjP03aNlvc+unXv3j3ic7Qf9+3bl+Lvb731lntd+OdF2h+htA31+LRp05J9RkJCQqB48eKB3377Ldnz7777bvd87Z9oaHvr+R07dkzx2I4dO9wxpOMx9BjydOrUyb22fv36yf6u7extp9Cb1rd///4p3mfMmDHu8XPOOSfQpUuXQM2aNd2/x40b5x4fP368+7fOl8zS+aT3qFSpUoZf6+2DaI/ntFSpUsXdQj3zzDPu/Zs2berORc/atWvdc/WYzufw71KjRo3Axo0bg3/fvXt3oGHDhu6x8M9IzTXXXOOeP3/+/BSPrVu3Ltm/W7Vq5Z7bvn17d46F0vGxadOm4L9XrFiR7HrhmTx5sjue9B6hdHxH2sY653Wejhw5Mtnf9b1PPfXUQFJSUmDNmjUpPmfs2LHu/bp27ZruNgCQvzAsAgAQE5Tirtujjz7qshLU86Z2s8Z/K0NBPdjqNVRvZXjqt9Lqleo8ZcoUW7ZsmfubeumVGqye34ceeijZ89VbqCwGvZ96EdOiDAf1PmpGAPW4h1LPqN57zZo1roda1DOq6v7qzQ6vI6E0aPXmZ4Z677VNMiJSart6v0uVKpVqT6h6NdXDq55sFX7LKPXOptb7rf2onvpw6uVV7/DkyZPNr3fffdf1disNPrwWhQozar/ouynVPj3esaRZEyJtW/U8K6PgscceS/aYZpYYPHiwWw4f7qGU9FGjRrltrYwBHVsvvviie0zrPHDgwGTP13AMDYlR3Qf1liuLR+uvVH1lVtx1111u+I0yQZSJo++sbazzIfy9UuMNKVLqf26j7ajvrOwWb2iIKGNE9SdEPf4eb+iRriOh2SnKDnj22WcztQ6RzqPQWh+qRaF9quNE+zI8y0fDIzRcwaOshEjZH8pqqlmzZlTngTIklM2hTK7wYSr63hq2oQykSMNyNLQj9PgGAA/DIgAAMcEbw6yGhH4cK4CgRpMKkIk3tZ/Sx8Op0aFGm9KDf/zxRxdQ0L3ofSKlQet91BDV8yKlrXu+++47d6/GYKTp9lSwT5QqraERmulCadv63NAGhUdpzJmpvaDZCKKlseYaRjBy5Ei33gpMaGiGghtqZEXyxx9/uFR7pVUrZV/jtjND9RRSS5tX4EWp2ppKUbMPqHGsxrln5cqV5ldax4mCKnXq1HHp4NpPWte0rF+/Pvi6SFTEUcEY1SjQcaJlzRahBp1qSShlP7yhqUBK+PAJBceUSq+AgRrFOu5DgzBt2rRxt3B6nbz00kvue2sIiBqbqougoJkCD2rIhs8qkVeobogCNfoOkYqWevvYO9dDl3W8h1OthNAARXq8oUEa5qOgpoJJ2sfhQRjVXdFxrGtQpOKd4RQ0VQBSQSMFCRSA2r9/f/Dx1M7RSNclnUORrks6Dr3rUjjVIfGGbwFAKIILAICYqq+QGq8QX6Re5NC/q4c3M89Pr4GpOg1p2bZtW7LP9cZXp9ZrmFEZeZ0aplOnTrUnn3zSjU33MhDUa69Gqnpw1ZsaSuP4lcmhoET4lItZtZ5qoKnmghrUCnjouV4gQg31aLIJ0pNV+z20x1o9wJGol1k1I7SdlTWjZWWzPPDAA65OgAJM6mGPhsa+qxGtAIsCLypemJYvvvjCFZvUGH0FsRRg0P5Vg1UNXDW8lbmjOhPpBRe8bZIVwZ2slJl9mdb5p/NChVijpToJql+gbasMCgXGRPVKdA5pNpvQz4+mToI8+OCD7njX+us40eu8Y037L616KuHXJR13uqV3XQrlFWfNzKwiAGIbwQUAQL7gZQFoCEJaqd3e8zL6/PQ+V8MyVNQt2vUMrQ4fKrX1SU/obATRUG+7etR1U++vUqjVOOrfv79rDHkF/DzqNVfv+SOPPOKyFtRgyUhDLL31VJE6BRaUvq/MiNAeZPX6Pv/885YVQve7Gv+Z3e/iBQa8hlwkmoEjUiaKNyxCxSCjpZkD1MBX9kha1GBUoT71rHsF+dRDrf3n9ZxrPyhLwxuukxZltCjIo6FECjKpGGdukJlz2CuKqfPPK6rpUXaA9mW0QQBRYEY37RMVHFWwQcUitd2VJaEsIW/4RTTBGQ2hUIFUzeKigqvhxUCVbRQN7ztrVgwV9MwI73iONvAFIP+g5gIAIF9QQ0kiTTu4b98+N2WceL3u3vM1g4QeD6dZE0KfnxqlUov3/ulR+rZmFlBKfKRpDyOtf3bTbARKtVeAQRkLCpREointFIxQo0nDN1ILkGSGAhyiAE14arpqPESa6tIbGhCaMu7nOFFQRftF0xNq6r70nHLKKe5eQygyygve3HjjjVE9X8eKPkdBgdAZTyLRNIbaXmpYhgrP/Egt4yKcerBvueUWt6wsjPRkRYZJNLzpU9Vo94YfpXcOh5734WbNmhXxWhANLxtEtR8UgFNdDwXJvCFLGv6i4TbpBYY0g4yCaaqvEB5YUHBHj0cjo9elUN7xHDoDCwAIwQUAQL6gwnYaK6yePTUSQinFWNNOqldc9RZE46KVtqw6DHo8lHogR4wY4Xr3r7766jQ/V+n7auBoHPvEiRNTHf+sOgui+g7qUdZ48fCx0Oq911jr7KZtEamRorHdahimlQ6tAprqmdXUeCpgqWk8s4IKDEZq9KsnV1MHRuJlTmSk8JxqdGgfvPbaa8GAhkcFADWVo54TzXSKynxQNkH48ebRtgxvaGt4jwpH6ntqGEhow1c98GpARspE0NSbCgboGE5tSI3XmFRhR2WghGaWqAdd+8zb7wpW6LmRsjci6d27tztndHx27do1YrBHY/TVS66aGenReadAibffM0s1KrRNtU6hQSaty1NPPRV8jsern6J9EBrcUzBAQYGMULAgUjDCC7p505PqGFFRRWVSdOnSJVkdEW//euvibQ8FP0K/j5eNEm3wQ9kmGnajmhBelky4n3/+2Z1f4bzjWTUkACAUwyIAAPmCetz1I1pF69To1b0CCRrnrrHlGr/vjYn2aC55FWBTw0TP0Q/y5cuXu/oJ6mnU/PPhvYfh1FDVD3iNjVZ6tGaaUI+fGhZ6LxVzU4NODQuvsfHMM8+4dHQFNRRQUHE5Pa6K8ir6OG7cuGzdVioSp/HiSslXD73qAKjAmzIWVFQxvVkg2rdv73r3le2gInWq3+AFbTJL66J9oW2pbahtokaaen+Vzq91DKcCk9qm2o5K5fbqOWjmjtSGNajxpucrYKGGfcuWLV3jT1kbCgIps0R1CKKhxrGCT5p1QQ338Ia6etPVwFMQS5+rbav9rkadvl/4bA3qMVbwQN9LQw+Ulq5eeQ1BUeBBafyhMx+EU4Nf+0T7VjOqhFKjVoE39a7rcb2nMjWU5RANBTS07griacYDDfXQ99J+V8Ncwy4UMFEwZezYsem+n9fAzkgBxUj0vXSM6NhVAU6dPwrk6RxWw1mztYQWb9S1oV27dm7ba3+pwKXOYa82hY6z8CKbqVEgRftHx632rwot6nqj80Ezn4TO0qBgz8KFC901R9tJ1ws9X4E+zf6gc17ZQDqG9ToFaHQdUQaDAg/aXzrn9Ddl10RDAVLtbx0TGmqhwpMaoqEA1oIFC9z66JgPHf6g/aJ6HTrnNDQDAJLJ6bkwAQDwQ/8ry8j/zn744YdA8+bNA2XKlAkUKlQocMwxx7h54VeuXBnx+ZpTXo9XrlzZPf/II48MXHXVVe59wg0ZMsSti+7DrV27NtCtW7dAzZo1A4ULFw4ULVo0cNxxxwVatGgRGD58eGDv3r3Jnr969epA27Zt3XpqvnnNO6/3TW3O+tSktU4ePa457z3Lly8PdO/ePXDOOecEypUrF0hISAhUqlQp0KRJk8DEiROTvXbJkiXu9W3atEnxviNGjAjEx8cHqlSpEli8eHGa65nW+3jWr18fuPvuu937JSYmBqpVq+bWc/v27e5vuoWbNGlS4KyzznLb2ztW9Fmibah/a5uGmzx5cqBx48aBkiVLuu9fvXr1QNeuXQMbN24MZMT8+fPdZzz00EMpHvv3338DN954Y+DYY491+7h48eKB+vXrB/r375/ieJBly5YF2rVrF6hTp447LrRtS5QoETjjjDMCvXv3DmzZsiXNdencuXOgdOnSgTVr1kR8fMyYMe741HGubTto0KBARu3evTvw1ltvBZo2bRooX768e69ixYoFatWqFbj33nsDCxYsSPZ8bx+EH89jx451f3/00Uej/uzUjoGdO3cGnn76affdtJ21Pg0aNHDHZyT79+8PvPzyy4ETTjjB7fsKFSoEOnToENi0aZN7rc7FaIwaNSpwww03uPNcx5/2r9bhkUcecfs+3LZt29x+rF27trtG6LNOOumkQKdOndz1w6PjXe+hY1LnwdFHH+3W77///nPncfj1MK1rho4ZbZu6deu6ddT2qVq1auCyyy4LvPnmm26dws8Lvdcrr7wS1TYAkL8U0H+ShxsAAACQVdQLrZ5gZahQYd+inhFBmUSa+aBMmTKWGyjTRBkjyhyItnBirFEmh7J4Fi9eHFVRUwD5CzUXAAAAspGGCWhYiWodIDpqwKqGQE4EFjTEJLzugYZSqJ6IpFdnJVapUKtmbFEtGAILACKh5gIAAEA2ql27tqv3oSKdiI5qE+QU1dxQZoJqHFSoUMEFG1RPQrUImjZt6uq15EfaDiqCqZoqABAJwyIAAACAQxRIULaJCiNu2LDBFZXUcAhNC6rsBRV4BACkRHABAAAAAAD4Qs0FAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAADgC8EFAAAAAABgfvwf7HtxajS6+xUAAAAASUVORK5CYII=","caption":"Random-effects pooled risk ratios for tuberculosis. Points are pooled RR, bars are 95% confidence intervals; the dashed line marks no effect (RR = 1). 0 of 1 factors pass the panel's checks (green); those flagged for high heterogeneity, too few studies, or non-significance are shown in amber. Real published data, computed from each trial's reported estimate (source cited above).","methods":"Risk ratios were pooled per factor with a DerSimonian-Laird random-effects model; between-study heterogeneity was assessed with Cochran's Q and I\u00b2, and factors with I\u00b2 > 75%, fewer than three studies, or a CI crossing 1 were flagged.","data_note":"Colditz GA, Brewer TF, Berkey CS, et al. Efficacy of BCG vaccine in the prevention of tuberculosis: meta-analysis of the published literature. JAMA 1994;271(9):698-702. Real per-trial 2x2 data (metafor dat.bcg).","sources":[{"study":"Aronson 1948","factor":"BCG vaccination","rr":0.41,"ci_low":0.13,"ci_high":1.26,"n":262},{"study":"Ferguson & Simes 1949","factor":"BCG vaccination","rr":0.2,"ci_low":0.09,"ci_high":0.49,"n":609},{"study":"Rosenthal 1960","factor":"BCG vaccination","rr":0.26,"ci_low":0.07,"ci_high":0.92,"n":451},{"study":"Hart & Sutherland 1977","factor":"BCG vaccination","rr":0.24,"ci_low":0.18,"ci_high":0.31,"n":26465},{"study":"Frimodt-Moller 1973","factor":"BCG vaccination","rr":0.8,"ci_low":0.52,"ci_high":1.25,"n":10877},{"study":"Stein & Aronson 1953","factor":"BCG vaccination","rr":0.46,"ci_low":0.39,"ci_high":0.54,"n":2992},{"study":"Vandiviere 1973","factor":"BCG vaccination","rr":0.2,"ci_low":0.08,"ci_high":0.5,"n":3174},{"study":"TPT Madras 1980","factor":"BCG vaccination","rr":1.01,"ci_low":0.89,"ci_high":1.14,"n":176782},{"study":"Coetzee & Berjak 1968","factor":"BCG vaccination","rr":0.63,"ci_low":0.39,"ci_high":1.0,"n":14776},{"study":"Rosenthal 1961","factor":"BCG vaccination","rr":0.25,"ci_low":0.15,"ci_high":0.43,"n":3381},{"study":"Comstock 1974","factor":"BCG vaccination","rr":0.71,"ci_low":0.57,"ci_high":0.89,"n":77972},{"study":"Comstock & Webster 1969","factor":"BCG vaccination","rr":1.56,"ci_low":0.37,"ci_high":6.53,"n":4839},{"study":"Comstock 1976","factor":"BCG vaccination","rr":0.98,"ci_low":0.58,"ci_high":1.66,"n":34767}]};
-  if (csvIn) csvIn.value = EXAMPLE_CSV;
-  if (outcomeIn) outcomeIn.value = "relapse";
+  fillExampleCsv();
   applyMode("clinical_yours", { skipFocus: true, keepResults: true });
 })();
 
