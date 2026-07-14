@@ -167,6 +167,7 @@ _BCG_TERMS = re.compile(
     r"prevent|effect|colditz|latitude)\b",
     re.I,
 )
+_GENE_TERMS = re.compile(r"\b(gene|knockout|perturb|screen|crispr|ko_)\b", re.I)
 _GREETING = re.compile(
     r"^\s*(hi|hello|hey|hiya|yo|sup|test|thanks?|ok|help)\b[\s!.?]*$",
     re.I,
@@ -183,17 +184,17 @@ def clinical_question_guard(question: str, data: MetaData) -> str | None:
     if not _is_real_bcg(data):
         return None
     q = question.strip()
-    if len(q) < 8 or _GREETING.match(q):
+    if _GENE_TERMS.search(q):
         return (
-            "This tab runs one fixed dataset: 13 published BCG tuberculosis trials. "
-            "Try a question about BCG efficacy, pooling, or heterogeneity, or pick "
-            "an example below."
+            "This tab is the BCG tuberculosis trials only — no gene screen. "
+            "Switch to Single-cell screen for GENE7, or tap a BCG example below."
         )
+    if len(q) < 8 or _GREETING.match(q):
+        return "Tap one of the BCG examples below — this tab only runs the 13 published trials."
     if not _BCG_TERMS.search(q):
         return (
-            "This tab is fixed to the published BCG tuberculosis trials. "
-            "Ask about BCG efficacy, heterogeneity, or whether the pooled effect is "
-            "trustworthy, or switch to Clinical meta-analysis for maternal VTE factors."
+            "Ask about BCG efficacy, pooling, or heterogeneity, or tap an example below. "
+            "For maternal VTE factors, switch to Clinical meta-analysis."
         )
     return None
 

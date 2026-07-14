@@ -28,8 +28,15 @@ def test_bcg_answer_varies_by_question_focus():
     assert "pooled estimate" in het["vetted_answer"].lower()
 
 
+def test_bcg_guard_rejects_gene_question():
+    data, _ = make_bcg_meta()
+    msg = clinical_question_guard("Which gene", data)
+    assert msg and "Single-cell" in msg
+
+
 if __name__ == "__main__":
     test_bcg_guard_rejects_hi()
     test_bcg_guard_accepts_efficacy_question()
+    test_bcg_guard_rejects_gene_question()
     test_bcg_answer_varies_by_question_focus()
     print("bcg guard tests passed")
