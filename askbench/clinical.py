@@ -15,9 +15,11 @@ correct with or without a model. Claude is used only to interpret and explain.
 """
 from __future__ import annotations
 
+import csv
 import math
 import re
 from dataclasses import dataclass
+from io import StringIO
 
 
 @dataclass
@@ -35,10 +37,11 @@ class MetaData:
     effect on the outcome, plus the outcome's baseline absolute incidence."""
 
     def __init__(self, studies, outcome="pregnancy-associated VTE",
-                 baseline_per_1000=1.2):
+                 baseline_per_1000=1.2, user_uploaded=False):
         self.studies = list(studies)
         self.outcome = outcome
         self.baseline_per_1000 = float(baseline_per_1000)
+        self.user_uploaded = user_uploaded
 
     def factors(self):
         return list(dict.fromkeys(s.factor for s in self.studies))
@@ -156,6 +159,103 @@ def absolute_risk_for_combination(rows, baseline_per_1000: float) -> dict:
         "assumption": "factors multiplied as if independent; a screening estimate, "
                       "not a joint model fitted on individuals",
     }
+
+
+# ---------------------------------------------------------------------------
+# Paste-your-own meta-analysis table (CSV)
+# ---------------------------------------------------------------------------
+
+def _norm_header(h: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", h.strip().lower()).strip("_")
+
+
+def _col(row: dict, *names: str):
+    for name in names:
+        for k, v in row.items():
+            if _norm_header(k) == name:
+                return v
+    return None
+
+
+def _fnum(val):
+    if val is None:
+        return None
+    s = str(val).strip()
+    if not s:
+        return None
+    return float(s)
+
+
+def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None, str | None]:
+    """Parse a pasted CSV of per-study estimates into MetaData.
+
+    Required columns (header names flexible):
+      factor + (log_rr, se)  OR  factor + (rr, se)  OR  factor + (rr, ci_low, ci_high)
+    Optional: n (defaults 100), study/population label (defaults Study 1..k).
+    Optional outcome column overrides the outcome argument.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return None, "Paste a CSV table with your study results (see the example)."
+    if len(raw) > 65536:
+        return None, "Table is too large (max 64 KB). Paste a summary table, not patient-level rows."
+
+    try:
+        rows = list(csv.DictReader(StringIO(raw)))
+    except csv.Error:
+        return None, "Could not read CSV. Use a header row and comma-separated values."
+
+    if not rows:
+        return None, "The table is empty. Add a header row and at least one study."
+    if len(rows) > 500:
+        return None, "Too many rows (max 500 studies). Summarise per study or per factor."
+
+    studies = []
+    seen_outcome = None
+    for i, row in enumerate(rows, start=1):
+        factor = _col(row, "factor", "risk_factor", "exposure", "treatment")
+        if not factor or not str(factor).strip():
+            continue
+        factor = str(factor).strip()
+        pop = _col(row, "study", "population", "trial", "label", "cohort") or f"Study {i}"
+        pop = str(pop).strip()
+        n_val = _fnum(_col(row, "n", "sample_size", "total", "participants"))
+        n = int(n_val) if n_val and n_val > 0 else 100
+
+        o = _col(row, "outcome")
+        if o and str(o).strip():
+            seen_outcome = str(o).strip()
+
+        log_rr = _fnum(_col(row, "log_rr", "logrr", "ln_rr", "log_or"))
+        se = _fnum(_col(row, "se", "stderr", "standard_error", "sem"))
+        rr = _fnum(_col(row, "rr", "risk_ratio", "or", "odds_ratio"))
+        ci_lo = _fnum(_col(row, "ci_low", "ci_lower", "lower", "lcl"))
+        ci_hi = _fnum(_col(row, "ci_high", "ci_upper", "upper", "ucl"))
+
+        if log_rr is None and rr is not None and rr > 0:
+            log_rr = math.log(rr)
+        if se is None and rr and ci_lo and ci_hi and ci_lo > 0 and ci_hi > 0:
+            se = (math.log(ci_hi) - math.log(ci_lo)) / (2 * 1.96)
+        if se is None and rr and rr > 0:
+            se = 0.2  # coarse fallback when only RR is given
+
+        if log_rr is None or se is None or se <= 0:
+            return None, (
+                f"Row {i} ({factor}): need log_rr and se, or rr and se, or rr with ci_low and ci_high."
+            )
+
+        studies.append(Study(factor, round(log_rr, 6), round(se, 6), n, pop))
+
+    if not studies:
+        return None, "No rows parsed. Include a factor column and effect columns (log_rr,se or rr,se)."
+
+    out = (seen_outcome or outcome or "outcome").strip() or "outcome"
+    md = MetaData(studies, outcome=out, baseline_per_1000=1.2, user_uploaded=True)
+    md.user_note = (
+        f"Your pasted table ({len(studies)} study rows, {len(md.factors())} factor(s)). "
+        f"Outcome: {out}. Numbers computed by the toolkit from your CSV, not the model."
+    )
+    return md, None
 
 
 # ---------------------------------------------------------------------------
@@ -344,9 +444,10 @@ def clinical_refusal(vetted, data: MetaData) -> dict | None:
 
 def clinical_lab_meeting(question: str, data: MetaData, llm=None) -> dict:
     """Run the full clinical panel and return a vetted finding."""
-    guard = clinical_question_guard(question, data)
-    if guard:
-        return {"error": guard, "question": question.strip()}
+    if not getattr(data, "user_uploaded", False):
+        guard = clinical_question_guard(question, data)
+        if guard:
+            return {"error": guard, "question": question.strip()}
     from .agents import make_llm
     llm = llm or make_llm()
     finding = clinical_analyst(question, data)
@@ -367,7 +468,7 @@ def clinical_lab_meeting(question: str, data: MetaData, llm=None) -> dict:
         "figure": forest_plot(data.outcome, vetted),
         "caption": caption,
         "methods": methods,
-        "data_note": getattr(data, "source", None) or
+        "data_note": getattr(data, "user_note", None) or getattr(data, "source", None) or
                      ("Synthetic illustrative meta-analysis. Effect sizes are "
                       "plausible but are not drawn from real published studies."),
         "sources": study_sources(data) if getattr(data, "source", None) else [],

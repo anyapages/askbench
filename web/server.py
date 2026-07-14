@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import askbench  # noqa: E402,F401  side effect: loads .env -> ANTHROPIC_API_KEY
 from askbench.data import make_synthetic
 from askbench.agents import lab_meeting, make_llm
-from askbench.clinical import make_synthetic_vte, clinical_lab_meeting, make_bcg_meta
+from askbench.clinical import make_synthetic_vte, clinical_lab_meeting, make_bcg_meta, parse_meta_csv
 from askbench.prompt_log import log_prompt
 
 import json
@@ -173,6 +173,13 @@ def ask():
             result = clinical_lab_meeting(question, _VTE, llm=chosen_llm)
         elif mode == "clinical_real":
             result = clinical_lab_meeting(question, _BCG, llm=chosen_llm)
+        elif mode == "clinical_yours":
+            csv_text = payload.get("csv") or ""
+            outcome = payload.get("outcome") or "outcome"
+            data, err = parse_meta_csv(csv_text, outcome=outcome if isinstance(outcome, str) else "outcome")
+            if err:
+                return jsonify({"error": err, "question": question}), 422
+            result = clinical_lab_meeting(question, data, llm=chosen_llm)
         else:
             result = lab_meeting(question, _DATA, llm=chosen_llm)
     except Exception:  # never leak a stack trace to the browser
