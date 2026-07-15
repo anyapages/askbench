@@ -54,10 +54,19 @@ def _rate_ok(ip: str) -> bool:
 
 
 def _pick_llm(ip: str):
-    if not (_LIVE and _rate_ok(ip) and _budget_ok()):
+    if not (_LIVE and _rate_ok(ip)):
         return _STUB, "offline"
 
     def guarded(system, user, model="claude-haiku-4-5-20251001"):
+        # Charge the budget per MODEL CALL, not per request. One request fans out into
+        # intent resolution, a context call per solid finding and the debate turns, so
+        # charging once per request under-counted the real spend by roughly an order of
+        # magnitude. Over budget degrades to the stub rather than failing the answer.
+        # These counters are module globals: on serverless each instance holds its own,
+        # so this bounds a single instance, not the fleet. Shared storage (Vercel KV)
+        # is the real fix; until then keep ASKBENCH_LIVE_BUDGET conservative.
+        if not _budget_ok():
+            return _STUB(system, user, model=model)
         try:
             return _REAL_LLM(system, user, model=model)
         except Exception:

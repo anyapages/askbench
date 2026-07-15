@@ -1973,7 +1973,10 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     }
   }
 
-  var _bcgQ = /\b(bcg|bgc|tuberculosis|tb|vaccine|trial|heterogen|pool|meta|efficacy|prevent|effect|colditz)\b/i;
+  // Stems, not whole words, and mirrors _BCG_TERMS in askbench/clinical.py. A trailing
+  // \b here rejected the tab's own chips, because "trials", "pooling" and
+  // "heterogeneity" never match the bare stem.
+  var _bcgQ = /\b(bcg|bgc|tuberculosis|tb\b|vaccin|trial|heterogen|pool|meta|efficac|prevent|effect|colditz|latitude)/i;
 
   function normalizeQuestion(text) {
     return String(text || "").replace(/\bbgc\b/gi, "BCG");
