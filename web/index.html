@@ -1848,9 +1848,15 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     }
   }
 
+  // Three different things used to land here wearing the same "Try this instead" label:
+  // a genuine input problem, an out-of-scope refusal, and the panel asking the scientist a
+  // clarifying question. The third is the whole product ("asks before it answers"), and
+  // labelling it as a rejection made our best behaviour look like a failure. A question is
+  // self-identifying: it ends in a question mark.
   function renderClarification(msg, question) {
+    var isAsking = /\?\s*$/.test(String(msg || "").trim());
     if (verdictTagEl) {
-      verdictTagEl.textContent = "Try this instead";
+      verdictTagEl.textContent = isAsking ? "The panel has a question" : "Try this instead";
       verdictTagEl.classList.add("clarify");
     }
     showQuestionAsked(question);
