@@ -6,13 +6,13 @@
 <meta name="description" content="Paste your meta-analysis table. AskBench pools per-study estimates in the browser and refuses when one combined number would mislead. Toolkit computes; Skeptic signs off." />
 <link rel="canonical" href="https://askbench-weld.vercel.app/" />
 <meta property="og:url" content="https://askbench-weld.vercel.app/" />
-<meta property="og:title" content="AskBench" />
+<meta property="og:title" content="AskBench: the analysis tool that says no" />
 <meta property="og:description" content="A statistical panel checks the evidence before the model speaks, and refuses when pooling is not safe." />
 <!--
   AskBench. The analysis agent that says no. Numbers by the toolkit, never the model.
   MIT licensed.
 -->
-<title>AskBench</title>
+<title>AskBench: the analysis tool that says no</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzEzMzAzZSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuNiA0LjYpIHNjYWxlKDAuNzIpIiBmaWxsPSJub25lIiBzdHJva2U9IiNkZmU2ZWMiIHN0cm9rZS13aWR0aD0iMi42IiBzdHJva2UtbGluZWNhcD0icm91bmQiPgogICAgPGxpbmUgeDE9IjUiIHkxPSIyNCIgeDI9IjI3IiB5Mj0iMjQiLz4KICAgIDxsaW5lIHgxPSI4IiB5MT0iMjQiIHgyPSI4IiB5Mj0iMjciLz4KICAgIDxsaW5lIHgxPSIyNCIgeTE9IjI0IiB4Mj0iMjQiIHkyPSIyNyIvPgogICAgPGxpbmUgeDE9IjEwIiB5MT0iMjQiIHgyPSIxMCIgeTI9IjE3Ii8+CiAgICA8bGluZSB4MT0iMjIiIHkxPSIyNCIgeDI9IjIyIiB5Mj0iMTkiLz4KICAgIDxsaW5lIHgxPSIxNiIgeTE9IjI0IiB4Mj0iMTYiIHkyPSIxMSIgc3Ryb2tlPSIjNGJiZTg2Ii8+CiAgPC9nPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQuNiA0LjYpIHNjYWxlKDAuNzIpIj4KICAgIDxjaXJjbGUgY3g9IjEwIiBjeT0iMTUiIHI9IjIuMiIgZmlsbD0iI2RmZTZlYyIvPgogICAgPGNpcmNsZSBjeD0iMjIiIGN5PSIxNyIgcj0iMi4yIiBmaWxsPSIjZGZlNmVjIi8+CiAgICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjkiIHI9IjIuNyIgZmlsbD0iIzRiYmU4NiIvPgogIDwvZz4KPC9zdmc+Cg==" />
 <script>
   /* Default dark unless the user explicitly chose light. */
@@ -327,6 +327,23 @@
   }
   .pane-thesis b { color: var(--text); font-weight: 600; }
   @media (max-width: 560px) { .pane-thesis { font-size: 13px; margin-bottom: 12px; } }
+
+  /* Three proofs, on screen. The BCG refusal renders in the card, but the measured
+     operating characteristic and the model-off result otherwise appear nowhere, so a
+     judge has to take the two strongest claims on faith. */
+  /* Named .proof-points, not .proof-strip: a legacy `.proof-strip { display: none }`
+     rule lives further down and would silently hide this. */
+  .proof-points {
+    list-style: none; margin: 0 0 16px; padding: 0;
+    display: flex; flex-wrap: wrap; gap: 6px 18px;
+    font-size: 12.5px; color: var(--text-dim);
+  }
+  .proof-points li { display: flex; align-items: baseline; gap: 6px; }
+  .proof-points li::before {
+    content: "✓"; color: var(--solid); font-weight: 700; font-size: 11px;
+  }
+  .proof-points b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .proof-points { gap: 5px 12px; font-size: 12px; } }
 
   /* Model-off proof: the same numbers shown with Claude on and Claude removed.
      Two columns on wide screens, stacked on a phone. */
@@ -856,6 +873,11 @@
 
       <div class="main-pane">
         <p class="pane-thesis">Most tools give you an answer. <b>AskBench tells you whether the statistics support one.</b> The toolkit computes every number, the Skeptic refuses what it cannot support.</p>
+        <ul class="proof-points">
+          <li>Refuses on real published data: 13 BCG trials, <b>RR 0.49</b>, no pooled number at <b>I²=92.1%</b></li>
+          <li>Measured, not asserted: <b>200 seeds</b>, <b>1.58%</b> false positives after Benjamini-Hochberg</li>
+          <li>Numbers identical with <b>Claude switched off</b></li>
+        </ul>
         <header class="pane-header">
           <div class="pane-titles">
             <h1 class="pane-title" id="modeTitle">BCG · 13 trials</h1>

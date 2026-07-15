@@ -253,7 +253,7 @@
 
     if (/heterogen|pool|trustworthy|one number|safe|report/.test(q) && het.length) {
       var h = het[0];
-      return "Safe to report one pooled number for " + h.factor + ": No — I²=" + h.i2 +
+      return "Safe to report one pooled number for " + h.factor + ": No. I²=" + h.i2 +
         "% is too high. Pooling would hide disagreement across studies, not resolve it.";
     }
     if (/strongest|effect|largest/.test(q) && vetted.length) {
@@ -284,15 +284,15 @@
   function safeReportLine(vetted) {
     var solid = vetted.filter(function (v) { return v.verdict === "solid"; });
     if (solid.length) {
-      return "Safe to report one pooled number for " + solid[0].factor + ": Yes — passes study count, heterogeneity, and significance checks.";
+      return "Safe to report one pooled number for " + solid[0].factor + ": Yes. Passes study count, heterogeneity, and significance checks.";
     }
     var flagged = vetted.filter(function (v) { return v.verdict === "flagged"; });
     if (!flagged.length) return "";
     var h = flagged[0];
     if ((h.flags || []).some(function (f) { return /heterogen/i.test(f); })) {
-      return "Safe to report one pooled number for " + h.factor + ": No — I²=" + h.i2 + "% (too heterogeneous).";
+      return "Safe to report one pooled number for " + h.factor + ": No. I²=" + h.i2 + "% (too heterogeneous).";
     }
-    return "Safe to report one pooled number for " + h.factor + ": No — " + ((h.flags || [])[0] || "checks failed");
+    return "Safe to report one pooled number for " + h.factor + ": No. " + ((h.flags || [])[0] || "checks failed");
   }
 
   function stubDebate(vetted, answer) {
