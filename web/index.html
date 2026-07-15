@@ -2024,12 +2024,30 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     return String(text || "").replace(/\bbgc\b/gi, "BCG");
   }
 
-  function clientBcgGuard(question) {
-    if (currentMode !== "clinical_real") return null;
+  // Each fixed-dataset tab runs on its own data, so a question must be on-topic for
+  // that data. Without this, any input ("hi anya") rendered the tab's canned verdict
+  // and read as "the tool ignores my question". Stems (\w*) so inflections pass; every
+  // example chip is verified to match. clinical_yours has no fixed topic (the user's
+  // upload defines it), so it is intentionally absent and never guarded.
+  var _topicTerms = {
+    single_cell: /\b(gene\w*|knock\w*|perturb\w*|ko[_ ]?\d|crispr|screen\w*|express\w*|regulat\w*|rais\w*|lower\w*|increas\w*|decreas\w*|hit|hits|effect\w*|significan\w*|readout|target\w*|trust)\b/i,
+    clinical: /\b(risk|factor\w*|vte|thrombo\w*|pregnan\w*|maternal|immobil\w*|obes\w*|pool\w*|meta|heterogen\w*|combin\w*|absolute|contribut\w*|effect\w*|rank\w*|drive\w*|previous)\b/i
+  };
+  var _topicHint = {
+    single_cell: "This tab runs a single-cell screen. Ask which knockouts raise or lower a readout gene (for example GENE7), or tap an example below.",
+    clinical: "This tab pools maternal VTE risk factors. Ask which factors are trustworthy, too heterogeneous, or drive most risk, or tap an example below.",
+    clinical_real: "This tab analyses the 13 published BCG-vaccine trials. Ask about BCG efficacy, pooling or heterogeneity, or tap an example below."
+  };
+
+  function clientTopicGuard(question) {
     var q = normalizeQuestion(question).trim();
-    if (/^\s*what\s+(is|are|was)\b/i.test(q) && _bcgQ.test(q)) {
+    if (!q) return null;
+    if (currentMode === "clinical_real" && /^\s*what\s+(is|are|was)\b/i.test(q) && _bcgQ.test(q)) {
       return "BCG is bacille Calmette-Guérin, a tuberculosis vaccine. This tab analyses 13 published trials — tap an example below to see the panel verdict.";
     }
+    var re = currentMode === "clinical_real" ? _bcgQ : _topicTerms[currentMode];
+    if (!re) return null;                 // clinical_yours: user's own data, no fixed topic
+    if (!re.test(q)) return _topicHint[currentMode] || null;
     return null;
   }
 
@@ -2318,7 +2336,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   function runAsk(question, attempt) {
     attempt = attempt || 0;
     question = normalizeQuestion(question);
-    var guardMsg = clientBcgGuard(question);
+    var guardMsg = clientTopicGuard(question);
     if (guardMsg) {
       renderClarification(guardMsg, question);
       return;
