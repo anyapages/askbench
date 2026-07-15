@@ -2499,6 +2499,11 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
 
       if (localBcg) {
         setBusy(false);
+        // MetaClient's data_note is written for the "paste your own table" tab. Nobody
+        // pasted anything here, so state this tab's real provenance instead.
+        localBcg.data_note = "13 published BCG trials (Colditz 1994, JAMA), real per-trial " +
+          "data. Outcome: tuberculosis. Computed locally in your browser, same toolkit math " +
+          "as the server.";
         // Keep the baked figure/caption/methods for the tab's own example questions:
         // those are pre-rendered artwork, not numbers, and the numbers above are live.
         var pre = bcgBakedExact(question);
@@ -2564,6 +2569,10 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
             if (vteRun && vteRun.ok) localVte = vteRun.data;
           } catch (e) { localVte = null; }
           if (localVte) {
+            // Same reason as the BCG tab: nobody pasted this, it is the benchmark set.
+            localVte.data_note = "VTE benchmark: 47 synthetic per-study rows across 9 risk " +
+              "factors (synthetic, planted ground truth). Outcome: pregnancy-associated VTE. " +
+              "Computed locally in your browser, same toolkit math as the server.";
             render(localVte, { live: true });
             pushWorklist(localVte, currentMode);
             requestAnimationFrame(function () {
