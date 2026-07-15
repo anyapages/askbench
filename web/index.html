@@ -2263,6 +2263,13 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   // with no network at all.
   var BCG_CSV = "factor,study,log_rr,se,n\nBCG vaccination,Aronson 1948,-0.8893,0.5706,262\nBCG vaccination,Ferguson & Simes 1949,-1.5854,0.4411,609\nBCG vaccination,Rosenthal 1960,-1.3481,0.6445,451\nBCG vaccination,Hart & Sutherland 1977,-1.4416,0.1415,26465\nBCG vaccination,Frimodt-Moller 1973,-0.2175,0.2263,10877\nBCG vaccination,Stein & Aronson 1953,-0.7861,0.0831,2992\nBCG vaccination,Vandiviere 1973,-1.6209,0.4722,3174\nBCG vaccination,TPT Madras 1980,0.012,0.0629,176782\nBCG vaccination,Coetzee & Berjak 1968,-0.4694,0.2376,14776\nBCG vaccination,Rosenthal 1961,-1.3713,0.2702,3381\nBCG vaccination,Comstock 1974,-0.3394,0.1114,77972\nBCG vaccination,Comstock & Webster 1969,0.4459,0.7297,4839\nBCG vaccination,Comstock 1976,-0.0173,0.2672,34767";
 
+  // The clinical benchmark: 47 synthetic per-study rows, ~2.2KB. Same story as BCG_CSV.
+  // Verified MetaClient reproduces the Python exactly on all 9 factors (RR, CI, I2, k and
+  // every verdict, including immobility flagged at I2 86.2%, IVF_ART at k=2 and the
+  // maternal_height near-null). The API path cost ~14.6s of Vercel Python cold start to
+  // compute 2.2KB, with zero model calls, so it now runs here instead.
+  var VTE_CSV = "factor,study,log_rr,se,n\nprevious_VTE,Nordic cohort,3.199,0.1274,870\nprevious_VTE,US claims,3.363,0.2292,981\nprevious_VTE,UK Biobank,3.1469,0.2669,615\nprevious_VTE,Asian registry,2.8545,0.2513,850\nprevious_VTE,French cohort,3.3267,0.1739,828\nprevious_VTE,Dutch registry,3.255,0.2407,1207\nthrombophilia,Nordic cohort,1.9934,0.2995,716\nthrombophilia,US claims,2.1096,0.2439,738\nthrombophilia,UK Biobank,2.2607,0.2146,794\nthrombophilia,Asian registry,2.5752,0.2881,677\nthrombophilia,French cohort,2.2739,0.227,964\nimmobility,Nordic cohort,2.5287,0.1609,737\nimmobility,US claims,3.0499,0.2617,1063\nimmobility,UK Biobank,2.0829,0.1805,931\nimmobility,Asian registry,2.2304,0.1615,939\nimmobility,French cohort,1.62,0.1363,566\nimmobility,Dutch registry,2.4675,0.1559,748\nobesity_bmi_over_30,Nordic cohort,0.9394,0.2332,538\nobesity_bmi_over_30,US claims,0.9227,0.21,1014\nobesity_bmi_over_30,UK Biobank,1.1232,0.2908,803\nobesity_bmi_over_30,Asian registry,0.6086,0.2153,1800\nobesity_bmi_over_30,French cohort,0.8756,0.248,872\nobesity_bmi_over_30,Dutch registry,1.2614,0.2869,1588\nobesity_bmi_over_30,Australian cohort,0.5065,0.2966,1672\nage_over_35,Nordic cohort,0.3184,0.2802,1886\nage_over_35,US claims,0.6645,0.2643,974\nage_over_35,UK Biobank,0.2061,0.1997,1097\nage_over_35,Asian registry,0.5234,0.2306,1732\nage_over_35,French cohort,0.4927,0.2564,1540\nage_over_35,Dutch registry,0.7018,0.2714,1215\nmultiple_pregnancy,Nordic cohort,0.9406,0.2939,774\nmultiple_pregnancy,US claims,0.431,0.2799,385\nmultiple_pregnancy,UK Biobank,0.3302,0.2197,638\nmultiple_pregnancy,Asian registry,0.8362,0.1943,640\nmultiple_pregnancy,French cohort,0.8555,0.1865,756\nemergency_caesarean,Nordic cohort,0.6848,0.1462,1307\nemergency_caesarean,US claims,0.7182,0.2681,1095\nemergency_caesarean,UK Biobank,0.8559,0.1857,972\nemergency_caesarean,Asian registry,0.6424,0.2465,1020\nemergency_caesarean,French cohort,0.7738,0.1307,628\nIVF_ART,Nordic cohort,0.6689,0.2958,88\nIVF_ART,US claims,0.8088,0.2754,207\nmaternal_height,Nordic cohort,0.3074,0.2991,879\nmaternal_height,US claims,0.171,0.2662,1416\nmaternal_height,UK Biobank,0.3161,0.2547,1346\nmaternal_height,Asian registry,-0.2988,0.2406,1316\nmaternal_height,French cohort,0.2016,0.2838,1329";
+
   function bcgScopeRefusal(question) {
     var q = normalizeQuestion(question);
     if (!_bcgOffDomain.test(q)) return null;
@@ -2543,6 +2550,27 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
             results.scrollIntoView({ behavior: "smooth", block: "start" });
           });
           return;
+        }
+        // The clinical benchmark is 47 rows of meta-analysis: the browser runs the same
+        // pooling the server would, verified identical across all 9 factors, so there is
+        // nothing to wait for. single_cell is NOT done here on purpose: its screen is a
+        // 3606x200 matrix needing Welch t-tests and BH correction, and a JS reimplementation
+        // that disagreed with the Python would be far worse than a short wait.
+        if (currentMode === "clinical") {
+          var localVte = null;
+          try {
+            var vteMap = MetaClient.suggestColumnMap(MetaClient.headersFromCsv(VTE_CSV));
+            var vteRun = MetaClient.runPanel(VTE_CSV, "pregnancy-associated VTE", question, vteMap);
+            if (vteRun && vteRun.ok) localVte = vteRun.data;
+          } catch (e) { localVte = null; }
+          if (localVte) {
+            render(localVte, { live: true });
+            pushWorklist(localVte, currentMode);
+            requestAnimationFrame(function () {
+              results.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+            return;
+          }
         }
         var body = { question: question, mode: currentMode };
         fetchPanel(question, attempt, body).then(function (r) {
