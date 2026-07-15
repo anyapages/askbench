@@ -42,7 +42,11 @@ class MetaData:
                  baseline_per_1000=1.2, user_uploaded=False):
         self.studies = list(studies)
         self.outcome = outcome
-        self.baseline_per_1000 = float(baseline_per_1000)
+        # None when the dataset carries no baseline risk of its own. An uploaded CSV
+        # must not inherit this module's pregnancy-VTE baseline: borrowing another
+        # population's baseline would invent an absolute risk, so we report none.
+        self.baseline_per_1000 = (
+            float(baseline_per_1000) if baseline_per_1000 is not None else None)
         self.user_uploaded = user_uploaded
 
     def factors(self):
@@ -252,7 +256,10 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
         return None, "No rows parsed. Include a factor column and effect columns (log_rr,se or rr,se)."
 
     out = (seen_outcome or outcome or "outcome").strip() or "outcome"
-    md = MetaData(studies, outcome=out, baseline_per_1000=1.2, user_uploaded=True)
+    # No baseline: an uploaded dataset is not pregnancy VTE, so it gets no absolute-risk
+    # arithmetic and no "per 1000 pregnancies" prose. Pooled ratios and heterogeneity
+    # are still reported, those are computed from the user's own rows.
+    md = MetaData(studies, outcome=out, baseline_per_1000=None, user_uploaded=True)
     md.user_note = (
         f"Your pasted table ({len(studies)} study rows, {len(md.factors())} factor(s)). "
         f"Outcome: {out}. Numbers computed by the toolkit from your CSV, not the model."
@@ -383,28 +390,40 @@ def clinical_synthesize(vetted, data: MetaData) -> str:
         named = ", ".join(
             f"{v['factor']} (RR {v['rr']}, 95% CI {v['ci_low']} to {v['ci_high']}, "
             f"{v['k']} studies)" for v in solid)
-        parts.append(f"The maternal risk factors with the strongest, most "
+        # "maternal" only when this really is the pregnancy-VTE dataset; an uploaded
+        # dataset gets a neutral "risk factors" so the panel never mislabels the domain.
+        noun = "maternal risk factors" if data.baseline_per_1000 is not None else "risk factors"
+        parts.append(f"The {noun} with the strongest, most "
                      f"consistent effect on {data.outcome} are {named}.")
-        combo = absolute_risk_for_combination(solid[:3], data.baseline_per_1000)
-        if combo["implausible"]:
-            lead = (f"Ranked individually, {solid[0]['factor']} and "
-                    f"{solid[1]['factor']} contribute most."
-                    if len(solid) >= 2 else
-                    f"The single factor that passes is {solid[0]['factor']}.")
-            parts.append(
-                lead + " The panel does not report a single combined absolute risk "
-                f"here: multiplying pooled ratios of this size implies about "
-                f"{combo['absolute_risk_per_1000']} per 1000, which is not credible. "
-                f"A joint absolute risk should come from a model fitted on individuals "
-                f"who carry these factors together, not from multiplying marginal "
-                f"pooled ratios.")
+        # Absolute-risk arithmetic needs a real baseline for this population. Without one
+        # (any uploaded CSV) we report the pooled ratios and stop, rather than inventing
+        # a per-1000 figure from a borrowed pregnancy baseline.
+        if data.baseline_per_1000 is not None:
+            combo = absolute_risk_for_combination(solid[:3], data.baseline_per_1000)
+            if combo["implausible"]:
+                lead = (f"Ranked individually, {solid[0]['factor']} and "
+                        f"{solid[1]['factor']} contribute most."
+                        if len(solid) >= 2 else
+                        f"The single factor that passes is {solid[0]['factor']}.")
+                parts.append(
+                    lead + " The panel does not report a single combined absolute risk "
+                    f"here: multiplying pooled ratios of this size implies about "
+                    f"{combo['absolute_risk_per_1000']} per 1000, which is not credible. "
+                    f"A joint absolute risk should come from a model fitted on individuals "
+                    f"who carry these factors together, not from multiplying marginal "
+                    f"pooled ratios.")
+            else:
+                parts.append(
+                    f"Together they raise the absolute risk from about "
+                    f"{combo['baseline_per_1000']} to about "
+                    f"{combo['absolute_risk_per_1000']} per 1000 pregnancies "
+                    f"(combined RR {combo['combined_rr']}), assuming they act "
+                    f"independently. Treat this as a screening estimate.")
         else:
             parts.append(
-                f"Together they raise the absolute risk from about "
-                f"{combo['baseline_per_1000']} to about "
-                f"{combo['absolute_risk_per_1000']} per 1000 pregnancies "
-                f"(combined RR {combo['combined_rr']}), assuming they act "
-                f"independently. Treat this as a screening estimate.")
+                "The panel reports the pooled effect per factor and stops there: with no "
+                "baseline risk supplied for this population, any absolute-risk figure "
+                "would be invented, so none is given.")
     else:
         parts.append("No single factor passes the panel's checks cleanly.")
     het = [v for v in vetted if v["verdict"] == "flagged"
@@ -428,6 +447,10 @@ def clinical_refusal(vetted, data: MetaData) -> dict | None:
     solid = sorted([v for v in vetted if v["verdict"] == "solid"],
                    key=lambda r: r["rr"], reverse=True)
     if len(solid) < 2:
+        return None
+    # No baseline (uploaded dataset) means no absolute-risk claim was ever made, so
+    # there is nothing to refuse here. Guarding also avoids a None * float crash.
+    if data.baseline_per_1000 is None:
         return None
     combo = absolute_risk_for_combination(solid[:3], data.baseline_per_1000)
     if not combo["implausible"]:
