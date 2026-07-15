@@ -2,6 +2,25 @@
 (function (global) {
   "use strict";
 
+  // An odds ratio, a hazard ratio and a risk ratio are DIFFERENT quantities. They are
+  // identical to code (all just a float in a column), which is exactly why lumping them
+  // into one "rr" alias list silently reported a pooled odds ratio as "RR 2.035". The
+  // pooling maths is the same for all three (log-transform, inverse-variance weight,
+  // DerSimonian-Laird), so we accept them all, but we track WHICH measure it is and label
+  // the output honestly. An OR overstates an RR whenever the outcome is common; an HR is a
+  // rate over time and is not an RR at all. Reporting one as another is the exact class of
+  // confident-but-wrong that this tool exists to refuse.
+  var EFFECT_ALIASES = {
+    RR: ["rr", "risk_ratio", "riskratio", "relative_risk"],
+    OR: ["or", "odds_ratio", "oddsratio"],
+    HR: ["hr", "hazard_ratio", "hazardratio"]
+  };
+  var LOG_EFFECT_ALIASES = {
+    RR: ["log_rr", "logrr", "ln_rr"],
+    OR: ["log_or", "logor", "ln_or"],
+    HR: ["log_hr", "loghr", "ln_hr"]
+  };
+
   var FIELD_ALIASES = {
     factor: ["factor", "risk_factor", "exposure", "treatment", "arm", "group", "intervention"],
     study: ["study", "population", "trial", "label", "cohort", "author", "reference", "paper"],
@@ -11,8 +30,35 @@
     se: ["se", "stderr", "standard_error", "sem"],
     rr: ["rr", "risk_ratio", "or", "odds_ratio", "hr", "hazard_ratio", "effect"],
     ci_low: ["ci_low", "ci_lower", "lower", "lcl", "lower_ci", "lo_95", "ci_lo"],
-    ci_high: ["ci_high", "ci_upper", "upper", "ucl", "upper_ci", "hi_95", "ci_hi"]
+    ci_high: ["ci_high", "ci_upper", "upper", "ucl", "upper_ci", "hi_95", "ci_hi"],
+    // Raw 2x2 counts: the most common real format, and what Colditz/dat.bcg actually is.
+    // Requiring a pre-computed log_rr+se meant the user had to write code first, which
+    // contradicts the whole "no code required" promise.
+    events_treat: ["events_treat", "events_treated", "tpos", "a", "e_treat", "event_exposed", "cases_treat"],
+    total_treat: ["total_treat", "n_treat", "n1", "n_treated", "total_treated", "n_exposed"],
+    events_ctrl: ["events_ctrl", "events_control", "cpos", "c", "e_ctrl", "event_control", "cases_ctrl"],
+    total_ctrl: ["total_ctrl", "n_ctrl", "n0", "n_control", "total_control", "n_unexposed"],
+    // metafor's dat.bcg column names: tpos/tneg/cpos/cneg (negatives, not totals)
+    nonevents_treat: ["tneg", "nonevents_treat", "noncases_treat"],
+    nonevents_ctrl: ["cneg", "nonevents_ctrl", "noncases_ctrl"]
   };
+
+  // Which effect measure does this table report? Returns "RR" | "OR" | "HR" | "" (unknown).
+  function detectEffectMeasure(headers) {
+    var norms = headers.map(normHeader);
+    var m, i;
+    for (m in LOG_EFFECT_ALIASES) {
+      for (i = 0; i < norms.length; i++) {
+        if (LOG_EFFECT_ALIASES[m].indexOf(norms[i]) !== -1) return m;
+      }
+    }
+    for (m in EFFECT_ALIASES) {
+      for (i = 0; i < norms.length; i++) {
+        if (EFFECT_ALIASES[m].indexOf(norms[i]) !== -1) return m;
+      }
+    }
+    return "";
+  }
 
   function normHeader(h) {
     return String(h || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
@@ -53,7 +99,13 @@
 
   function suggestColumnMap(headers) {
     var norms = headers.map(normHeader);
-    var map = { factor: "", study: "", n: "", outcome: "", log_rr: "", se: "", rr: "", ci_low: "", ci_high: "" };
+    // Every role here must also exist in FIELD_ALIASES: the loop below only fills keys
+    // present in this object, so a role missing here is silently never detected.
+    var map = {
+      factor: "", study: "", n: "", outcome: "", log_rr: "", se: "", rr: "", ci_low: "", ci_high: "",
+      events_treat: "", total_treat: "", events_ctrl: "", total_ctrl: "",
+      nonevents_treat: "", nonevents_ctrl: ""
+    };
     function pick(role) {
       var aliases = FIELD_ALIASES[role] || [];
       for (var i = 0; i < norms.length; i++) {
@@ -67,11 +119,20 @@
     return map;
   }
 
+  // Raw 2x2 counts are usable if we have events + group size on both arms. Group size can
+  // come either as a total (n_treat) or as the negatives (tneg), which is metafor's shape.
+  function twoByTwoOk(map) {
+    var treatSize = map.total_treat || map.nonevents_treat;
+    var ctrlSize = map.total_ctrl || map.nonevents_ctrl;
+    return !!(map.events_treat && treatSize && map.events_ctrl && ctrlSize);
+  }
+
   function mapOk(map) {
     if (!map || !map.factor) return false;
     if (map.log_rr && map.se) return true;
     if (map.rr && map.se) return true;
     if (map.rr && map.ci_low && map.ci_high) return true;
+    if (twoByTwoOk(map)) return true;
     return false;
   }
 
@@ -96,7 +157,10 @@
     text = (text || "").trim();
     if (!text) return { ok: false, error: "Paste a CSV table with your study results." };
     if (text.length > 65536) return { ok: false, error: "Table is too large (max 64 KB)." };
-    if (!mapOk(map)) return { ok: false, error: "Map columns: need factor plus log_rr+se, rr+se, or rr with both CIs." };
+    if (!mapOk(map)) {
+      return { ok: false, error: "Map columns: need a factor column plus one of: raw 2x2 counts " +
+        "(events and size for each arm), an effect with its SE, or an effect with both CI bounds." };
+    }
 
     var rows = parseCsvRows(text);
     if (rows.length < 2) return { ok: false, error: "Need a header row and at least one study." };
@@ -111,6 +175,13 @@
     var ri = colIndex(headers, map.rr);
     var loi = colIndex(headers, map.ci_low);
     var hii = colIndex(headers, map.ci_high);
+    // Raw 2x2 counts (events + arm size on each arm).
+    var eti = colIndex(headers, map.events_treat);
+    var tti = colIndex(headers, map.total_treat);
+    var eci = colIndex(headers, map.events_ctrl);
+    var tci = colIndex(headers, map.total_ctrl);
+    var nti = colIndex(headers, map.nonevents_treat);
+    var nci = colIndex(headers, map.nonevents_ctrl);
 
     var studies = [];
     var seenOutcome = null;
@@ -140,6 +211,31 @@
       if (se == null && rr && ciLo && ciHi && ciLo > 0 && ciHi > 0) {
         se = (Math.log(ciHi) - Math.log(ciLo)) / (2 * 1.96);
       }
+
+      // Raw 2x2 counts -> log risk ratio + SE. Identical to askbench/clinical.py
+      // (make_bcg_meta): rr = (a/n1)/(c/n0), se = sqrt(1/a - 1/n1 + 1/c - 1/n0). This is
+      // the risk-ratio variance, not the odds-ratio one. Arm size may be given as a total
+      // (n_treat) or as negatives (tneg), which is metafor's dat.bcg shape.
+      if (logRr == null && eti >= 0) {
+        var a = fnum(cells[eti]);
+        var c = eci >= 0 ? fnum(cells[eci]) : null;
+        var n1 = tti >= 0 ? fnum(cells[tti])
+               : (nti >= 0 && a != null ? a + fnum(cells[nti]) : null);
+        var n0 = tci >= 0 ? fnum(cells[tci])
+               : (nci >= 0 && c != null ? c + fnum(cells[nci]) : null);
+        if (a != null && c != null && n1 > 0 && n0 > 0 && a <= n1 && c <= n0) {
+          // Haldane-Anscombe: a zero cell leaves the ratio and its variance undefined, so
+          // add 0.5 to every cell. Standard practice and what metafor does by default.
+          if (a === 0 || c === 0 || a === n1 || c === n0) { a += 0.5; c += 0.5; n1 += 1; n0 += 1; }
+          var riskT = a / n1, riskC = c / n0;
+          if (riskT > 0 && riskC > 0) {
+            logRr = Math.log(riskT / riskC);
+            se = Math.sqrt(1 / a - 1 / n1 + 1 / c - 1 / n0);
+            if (!(nVal > 0)) n = Math.round(n1 + n0);
+          }
+        }
+      }
+
       if (se == null && rr && rr > 0) se = 0.2;
 
       if (logRr == null || se == null || se <= 0) {
@@ -165,11 +261,16 @@
     var factors = {};
     studies.forEach(function (s) { factors[s.factor] = true; });
     var outcome = (seenOutcome || outcomeArg || "outcome").trim() || "outcome";
+    // Which quantity did the user actually give us? 2x2 counts are a risk ratio by
+    // construction; otherwise the column header decides. Never assume RR.
+    var measure = twoByTwoOk(map) && !map.log_rr && !map.rr
+      ? "RR" : (detectEffectMeasure(headers) || "RR");
 
     return {
       ok: true,
       studies: studies,
       outcome: outcome,
+      effect_measure: measure,
       factorCount: Object.keys(factors).length,
       data_note: "Your pasted table (" + studies.length + " study rows, " +
         Object.keys(factors).length + " factor(s)). Outcome: " + outcome +
@@ -357,9 +458,15 @@
     });
 
     var answer = focusedAnswer(question, vetted, parsed.outcome) || synthesize(vetted, parsed.outcome);
-    var methods = "Risk ratios pooled per factor with DerSimonian-Laird random effects; " +
-      "heterogeneity assessed with Cochran's Q and I²; factors with I² > 75%, fewer than three studies, " +
-      "or a CI crossing 1 are flagged.";
+    var m = parsed.effect_measure || "RR";
+    var MEASURE_NAME = { RR: "Risk ratios", OR: "Odds ratios", HR: "Hazard ratios" };
+    var methods = (MEASURE_NAME[m] || "Risk ratios") + " pooled per factor with DerSimonian-Laird " +
+      "random effects; heterogeneity assessed with Cochran's Q and I²; factors with I² > 75%, " +
+      "fewer than three studies, or a CI crossing 1 are flagged." +
+      (m !== "RR"
+        ? " Your table reports " + m + ", so every pooled figure here is an " + m +
+          ", not a risk ratio: they are different quantities and are not interchangeable."
+        : "");
 
     return {
       ok: true,
@@ -371,9 +478,10 @@
         safe_report: safeReportLine(vetted),
         debate: stubDebate(vetted, answer),
         refusal: null,
+        effect_measure: m,
         figure: forestPlotSvg(parsed.outcome, vetted),
-        caption: "Random-effects pooled risk ratios for " + parsed.outcome +
-          ". Green = passes Skeptic checks; amber = flagged.",
+        caption: "Random-effects pooled " + (m === "RR" ? "risk ratios" : m === "OR" ? "odds ratios" : "hazard ratios") +
+          " for " + parsed.outcome + ". Green = passes Skeptic checks; amber = flagged.",
         methods: methods,
         data_note: parsed.data_note,
         sources: parsed.studies.map(function (s) {
