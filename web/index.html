@@ -2035,31 +2035,28 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     return String(text || "").replace(/\bbgc\b/gi, "BCG");
   }
 
-  // Each fixed-dataset tab runs on its own data, so a question must be on-topic for
-  // that data. Without this, any input ("hi anya") rendered the tab's canned verdict
-  // and read as "the tool ignores my question". Stems (\w*) so inflections pass; every
-  // example chip is verified to match. clinical_yours has no fixed topic (the user's
-  // upload defines it), so it is intentionally absent and never guarded.
-  var _topicTerms = {
-    single_cell: /\b(gene\w*|knock\w*|perturb\w*|ko[_ ]?\d|crispr|screen\w*|express\w*|regulat\w*|rais\w*|lower\w*|increas\w*|decreas\w*|hit|hits|effect\w*|significan\w*|readout|target\w*|trust)\b/i,
-    clinical: /\b(risk|factor\w*|vte|thrombo\w*|pregnan\w*|maternal|immobil\w*|obes\w*|pool\w*|meta|heterogen\w*|combin\w*|absolute|contribut\w*|effect\w*|rank\w*|drive\w*|previous)\b/i
-  };
+  // Only obvious greetings/smalltalk are nudged (and the verdict card stays on
+  // screen, no dead-end). Every real question runs, including ones with no keyword
+  // ("can I trust this?"): an earlier keyword allowlist wrongly rejected those.
   var _topicHint = {
-    single_cell: "This tab runs a single-cell screen. Ask which knockouts raise or lower a readout gene (for example GENE7), or tap an example below.",
-    clinical: "This tab pools maternal VTE risk factors. Ask which factors are trustworthy, too heterogeneous, or drive most risk, or tap an example below.",
-    clinical_real: "This tab analyses the 13 published BCG-vaccine trials. Ask about BCG efficacy, pooling or heterogeneity, or tap an example below."
+    single_cell: "Ask which knockouts raise or lower a readout gene like GENE7, or tap an example below.",
+    clinical: "Ask which risk factors are trustworthy, too heterogeneous, or drive most risk, or tap an example below.",
+    clinical_real: "Ask about BCG efficacy, pooling or heterogeneity across the 13 trials, or tap an example below.",
+    clinical_yours: "Ask about your uploaded studies: the pooled effect, heterogeneity, or whether one combined number is safe."
   };
+  var _smalltalk = /^(hi+|hey+|hello+|yo|sup|hiya|howdy|greetings|thx|thanks?|thank\s+you|cheers|okay?|test(ing)?|ping|hola|nice|cool)\b/i;
 
-  function clientTopicGuard(question) {
+  function isSmalltalk(q) {
+    q = q.trim();
+    if (q.length < 2) return true;
+    if (_smalltalk.test(q)) return true;
+    return /\b(who\s+are\s+you|your\s+name|how\s+are\s+you|what'?s\s+up|what\s+can\s+you\s+do|are\s+you\s+there)\b/i.test(q);
+  }
+
+  function smalltalkNudge(question) {
     var q = normalizeQuestion(question).trim();
-    if (!q) return null;
-    if (currentMode === "clinical_real" && /^\s*what\s+(is|are|was)\b/i.test(q) && _bcgQ.test(q)) {
-      return "BCG is bacille Calmette-Guérin, a tuberculosis vaccine. This tab analyses 13 published trials — tap an example below to see the panel verdict.";
-    }
-    var re = currentMode === "clinical_real" ? _bcgQ : _topicTerms[currentMode];
-    if (!re) return null;                 // clinical_yours: user's own data, no fixed topic
-    if (!re.test(q)) return _topicHint[currentMode] || null;
-    return null;
+    if (!q || !isSmalltalk(q)) return null;
+    return _topicHint[currentMode] || "Ask about the data, or tap an example below.";
   }
 
   function normalizeCsv(s) {
@@ -2347,9 +2344,9 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   function runAsk(question, attempt) {
     attempt = attempt || 0;
     question = normalizeQuestion(question);
-    var guardMsg = clientTopicGuard(question);
-    if (guardMsg) {
-      renderClarification(guardMsg, question);
+    var nudge = smalltalkNudge(question);
+    if (nudge) {
+      showNotice(nudge);        // keep the verdict card visible, no dead-end
       return;
     }
     setBusy(true);
