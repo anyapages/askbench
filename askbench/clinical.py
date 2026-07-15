@@ -39,9 +39,13 @@ class MetaData:
     effect on the outcome, plus the outcome's baseline absolute incidence."""
 
     def __init__(self, studies, outcome="pregnancy-associated VTE",
-                 baseline_per_1000=1.2, user_uploaded=False):
+                 baseline_per_1000=1.2, user_uploaded=False, effect_measure="RR"):
         self.studies = list(studies)
         self.outcome = outcome
+        # Which quantity these studies report: "RR", "OR" or "HR". The pooling maths is
+        # identical for all three, but the label is not interchangeable, so it travels
+        # with the data rather than being assumed to be RR at render time.
+        self.effect_measure = effect_measure
         # None when the dataset carries no baseline risk of its own. An uploaded CSV
         # must not inherit this module's pregnancy-VTE baseline: borrowing another
         # population's baseline would invent an absolute risk, so we report none.
@@ -206,10 +210,17 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
     if len(raw) > 65536:
         return None, "Table is too large (max 64 KB). Paste a summary table, not patient-level rows."
 
+    # A scientist's table lives in Excel or Sheets, and pasting from there gives TABS,
+    # not commas. Splitting on commas only meant the most common paste in the world
+    # failed with a message about column schemas. Sniff the delimiter instead.
     try:
-        rows = list(csv.DictReader(StringIO(raw)))
+        header = raw.splitlines()[0] if raw.splitlines() else ""
+        delim = max([",", "\t", ";", "|"], key=header.count)
+        if header.count(delim) == 0:
+            delim = ","
+        rows = list(csv.DictReader(StringIO(raw), delimiter=delim))
     except csv.Error:
-        return None, "Could not read CSV. Use a header row and comma-separated values."
+        return None, "Could not read the table. Use a header row, one study per line."
 
     if not rows:
         return None, "The table is empty. Add a header row and at least one study."
@@ -218,6 +229,7 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
 
     studies = []
     seen_outcome = None
+    measure_seen: set[str] = set()
     for i, row in enumerate(rows, start=1):
         factor = _col(row, "factor", "risk_factor", "exposure", "treatment")
         if not factor or not str(factor).strip():
@@ -232,22 +244,83 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
         if o and str(o).strip():
             seen_outcome = str(o).strip()
 
-        log_rr = _fnum(_col(row, "log_rr", "logrr", "ln_rr", "log_or"))
+        log_rr = _fnum(_col(row, "log_rr", "logrr", "ln_rr"))
         se = _fnum(_col(row, "se", "stderr", "standard_error", "sem"))
-        rr = _fnum(_col(row, "rr", "risk_ratio", "or", "odds_ratio"))
+        rr = _fnum(_col(row, "rr", "risk_ratio", "relative_risk"))
         ci_lo = _fnum(_col(row, "ci_low", "ci_lower", "lower", "lcl"))
         ci_hi = _fnum(_col(row, "ci_high", "ci_upper", "upper", "ucl"))
+        # An odds ratio and a hazard ratio are NOT risk ratios. Pooling them with
+        # inverse-variance DL is legitimate; calling the result an RR is not. Read them
+        # into the same slot but remember which measure this table actually reports, and
+        # label the output with it. See measure_seen below.
+        if rr is None:
+            rr = _fnum(_col(row, "or", "odds_ratio"))
+            if rr is not None:
+                measure_seen.add("OR")
+            else:
+                rr = _fnum(_col(row, "hr", "hazard_ratio"))
+                if rr is not None:
+                    measure_seen.add("HR")
+        elif rr is not None:
+            measure_seen.add("RR")
+        if log_rr is None:
+            lo = _fnum(_col(row, "log_or", "logor", "ln_or"))
+            if lo is not None:
+                log_rr, _ = lo, measure_seen.add("OR")
+            else:
+                lh = _fnum(_col(row, "log_hr", "loghr", "ln_hr"))
+                if lh is not None:
+                    log_rr, _ = lh, measure_seen.add("HR")
+        elif log_rr is not None:
+            measure_seen.add("RR")
 
         if log_rr is None and rr is not None and rr > 0:
             log_rr = math.log(rr)
         if se is None and rr and ci_lo and ci_hi and ci_lo > 0 and ci_hi > 0:
             se = (math.log(ci_hi) - math.log(ci_lo)) / (2 * 1.96)
-        if se is None and rr and rr > 0:
-            se = 0.2  # coarse fallback when only RR is given
+
+        # Raw 2x2 counts -> log risk ratio + SE, the same formula make_bcg_meta uses:
+        # rr = (a/n1)/(c/n0), se = sqrt(1/a - 1/n1 + 1/c - 1/n0). This is the risk-ratio
+        # variance, not the odds-ratio one. Arm size may be a total or the negatives.
+        if log_rr is None:
+            a = _fnum(_col(row, "events_treat", "events_treated", "tpos", "e_treat", "cases_treat"))
+            c = _fnum(_col(row, "events_ctrl", "events_control", "cpos", "e_ctrl", "cases_ctrl"))
+            n1 = _fnum(_col(row, "total_treat", "n_treat", "n1", "n_treated", "total_treated"))
+            n0 = _fnum(_col(row, "total_ctrl", "n_ctrl", "n0", "n_control", "total_control"))
+            if n1 is None:
+                tneg = _fnum(_col(row, "tneg", "nonevents_treat", "noncases_treat"))
+                n1 = a + tneg if (a is not None and tneg is not None) else None
+            if n0 is None:
+                cneg = _fnum(_col(row, "cneg", "nonevents_ctrl", "noncases_ctrl"))
+                n0 = c + cneg if (c is not None and cneg is not None) else None
+            if None not in (a, c, n1, n0) and n1 > 0 and n0 > 0 and a <= n1 and c <= n0:
+                # Haldane-Anscombe: a zero cell leaves the ratio undefined, add 0.5 to all.
+                if a == 0 or c == 0 or a == n1 or c == n0:
+                    a, c, n1, n0 = a + 0.5, c + 0.5, n1 + 1, n0 + 1
+                if a / n1 > 0 and c / n0 > 0:
+                    log_rr = math.log((a / n1) / (c / n0))
+                    se = math.sqrt(1.0 / a - 1.0 / n1 + 1.0 / c - 1.0 / n0)
+                    measure_seen.add("RR")
+                    if not (n_val and n_val > 0):
+                        n = int(round(n1 + n0))
+
+        # NEVER invent uncertainty. There used to be a `se = 0.2` fallback here for rows
+        # that gave an effect with no SE and no CI. It made every weight identical, so Q
+        # had nothing to detect, I2 collapsed to 0 and the heterogeneity gate always
+        # opened: a table carrying zero uncertainty information came back SOLID with a
+        # confident 95% CI. That is a fabricated interval, and it disarmed the one check
+        # this tool exists to perform. A row without uncertainty is not poolable. Say so.
+        if log_rr is not None and (se is None or se <= 0):
+            return None, (
+                f"Row {i} ({factor}): an effect with no uncertainty cannot be pooled. "
+                f"Add a standard error, or both confidence limits, or the raw 2x2 counts. "
+                f"We will not invent the uncertainty for you."
+            )
 
         if log_rr is None or se is None or se <= 0:
             return None, (
-                f"Row {i} ({factor}): need log_rr and se, or rr and se, or rr with ci_low and ci_high."
+                f"Row {i} ({factor}): need raw 2x2 counts (events and size per arm), "
+                f"or an effect with its SE, or an effect with both CI bounds."
             )
 
         studies.append(Study(factor, round(log_rr, 6), round(se, 6), n, pop))
@@ -255,14 +328,31 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
     if not studies:
         return None, "No rows parsed. Include a factor column and effect columns (log_rr,se or rr,se)."
 
+    # Mixing measures inside one table is not a labelling problem, it is meaningless:
+    # an odds ratio and a risk ratio are different quantities and cannot share a pooled
+    # estimate. Refuse rather than silently pick one.
+    if len(measure_seen) > 1:
+        return None, (
+            "This table mixes " + " and ".join(sorted(measure_seen)) + " columns. Those are "
+            "different quantities and cannot be pooled into one estimate. Use one measure "
+            "per table."
+        )
+    measure = next(iter(measure_seen), "RR")
+
     out = (seen_outcome or outcome or "outcome").strip() or "outcome"
     # No baseline: an uploaded dataset is not pregnancy VTE, so it gets no absolute-risk
     # arithmetic and no "per 1000 pregnancies" prose. Pooled ratios and heterogeneity
     # are still reported, those are computed from the user's own rows.
-    md = MetaData(studies, outcome=out, baseline_per_1000=None, user_uploaded=True)
+    md = MetaData(studies, outcome=out, baseline_per_1000=None, user_uploaded=True,
+                  effect_measure=measure)
+    _MEASURE_NAME = {"RR": "Risk ratios", "OR": "Odds ratios", "HR": "Hazard ratios"}
     md.user_note = (
         f"Your pasted table ({len(studies)} study rows, {len(md.factors())} factor(s)). "
-        f"Outcome: {out}. Numbers computed by the toolkit from your CSV, not the model."
+        f"Outcome: {out}. {_MEASURE_NAME.get(measure, 'Risk ratios')} pooled from your CSV "
+        f"by the toolkit, not the model."
+        + ("" if measure == "RR" else
+           f" Your table reports {measure}, so every pooled figure is an {measure}, "
+           f"not a risk ratio: they are different quantities and are not interchangeable.")
     )
     return md, None
 

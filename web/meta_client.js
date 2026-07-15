@@ -67,7 +67,22 @@
     return String(h || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
   }
 
-  function parseCsvRows(text) {
+  // A scientist's table lives in Excel or Sheets, and pasting from there gives TABS, not
+  // commas. Splitting on commas only meant the most common paste in the world arrived as
+  // a single column and failed with a message about column schemas, which is the opposite
+  // of "no code required". Sniff the delimiter from the header line instead.
+  function sniffDelimiter(text) {
+    var header = String(text || "").split(/\r?\n/)[0] || "";
+    var best = ",", bestCount = 0;
+    [",", "\t", ";", "|"].forEach(function (d) {
+      var n = header.split(d).length - 1;
+      if (n > bestCount) { bestCount = n; best = d; }
+    });
+    return bestCount > 0 ? best : ",";
+  }
+
+  function parseCsvRows(text, delim) {
+    delim = delim || sniffDelimiter(text);
     var rows = [];
     var row = [];
     var cell = "";
@@ -79,7 +94,7 @@
         else if (c === '"') inQuotes = false;
         else cell += c;
       } else if (c === '"') inQuotes = true;
-      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === delim) { row.push(cell); cell = ""; }
       else if (c === "\n" || c === "\r") {
         if (c === "\r" && text[i + 1] === "\n") i++;
         row.push(cell); cell = "";
@@ -248,10 +263,21 @@
         }
       }
 
-      if (se == null && rr && rr > 0) se = 0.2;
+      // NEVER invent uncertainty. There used to be a `se = 0.2` fallback here for a row
+      // that gave an effect with no SE and no CI. A constant SE makes every weight
+      // identical, so Q has nothing to detect, I2 collapses to 0 and the heterogeneity
+      // gate always opens: a table carrying zero uncertainty came back SOLID with a
+      // confident 95% CI. That interval was fabricated, and it disarmed the one check
+      // this tool exists to perform. A row without uncertainty is not poolable.
+      if (logRr != null && (se == null || se <= 0)) {
+        return { ok: false, error: "Row " + r + " (" + factor + "): an effect with no uncertainty " +
+          "cannot be pooled. Add a standard error, or both confidence limits, or the raw 2x2 " +
+          "counts. We will not invent the uncertainty for you." };
+      }
 
       if (logRr == null || se == null || se <= 0) {
-        return { ok: false, error: "Row " + r + " (" + factor + "): need effect + uncertainty (SE or CI)." };
+        return { ok: false, error: "Row " + r + " (" + factor + "): need raw 2x2 counts " +
+          "(events and size per arm), an effect with its SE, or an effect with both CI bounds." };
       }
 
       studies.push({
