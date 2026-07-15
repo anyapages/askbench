@@ -2121,10 +2121,10 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     for (i = 0; i < keys.length; i++) {
       if (normalizeQuestion(keys[i]).toLowerCase() === q) return baked[keys[i]];
     }
-    if (/heterogen|pool/.test(q)) return baked["Which factors are too heterogeneous to pool?"];
-    if (/strongest|effect/.test(q)) return baked["What is the strongest pooled effect?"];
-    if (/one number|combined|safe|report/.test(q)) return baked["Can I report one combined number?"];
-    return baked[keys[0]] || null;
+    // Anything that is not one of the baked example questions must run for real
+    // (see benchmarkBakedPick below for the full rationale) — no keyword guess,
+    // no default entry. A near-miss falls through to MetaClient's live computation.
+    return null;
   }
 
   function yoursBakedFor(question) {
@@ -2166,17 +2166,16 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     for (i = 0; i < keys.length; i++) {
       if (normalizeQuestion(keys[i]).toLowerCase() === q) return pool[keys[i]];
     }
-    if (mode === "clinical") {
-      if (/heterogen|pool/.test(q)) return pool["Which risk factors are too heterogeneous to pool?"];
-      if (/combin|drives|risk/.test(q)) return pool["Which combination drives most VTE risk?"];
-      if (/rank|effect/.test(q)) return pool["Rank risk factors by pooled effect"];
-    }
-    if (mode === "single_cell") {
-      if (/lower|decreas/.test(q)) return pool["Which perturbations lower GENE7?"];
-      if (/top hit|main readout/.test(q)) return pool["Show me the top hits that raise the main readout gene"];
-      return pool["Which knockouts most raise GENE7?"];
-    }
-    return pool[keys[0]] || null;
+    // Every chip in MODES[mode].chips is one of the keys above, so a real chip click
+    // (or an exact retype of one) is already handled by the exact/normalized match.
+    // A keyword guess here used to force ANY other question — a different gene, a
+    // different direction, a genuinely new question — into one of a handful of canned
+    // answers, so the panel looked like it was ignoring the question. Returning null
+    // for a non-match is correct: benchmarkBakedFor then resolves to null and runAsk
+    // falls through to the live /ask call, which computes a real, question-specific
+    // answer (verified: e.g. asking about a different gene under a different
+    // condition returns that gene's own findings, not the GENE7 default).
+    return null;
   }
 
   function benchmarkBakedFor(mode, question) {
