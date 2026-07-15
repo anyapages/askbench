@@ -338,12 +338,18 @@
     display: flex; flex-wrap: wrap; gap: 6px 18px;
     font-size: 12.5px; color: var(--text-dim);
   }
-  .proof-points li { display: flex; align-items: baseline; gap: 6px; }
+  /* The tick hangs in the padding and the sentence stays normal inline flow. Do NOT
+     make the li a flex container: that promotes each inline <b> to a flex item and
+     shatters the sentence into columns on a narrow screen. */
+  .proof-points li { position: relative; padding-left: 15px; line-height: 1.5; }
   .proof-points li::before {
-    content: "✓"; color: var(--solid); font-weight: 700; font-size: 11px;
+    content: "✓"; position: absolute; left: 0; top: 0;
+    color: var(--solid); font-weight: 700; font-size: 11px;
   }
   .proof-points b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-  @media (max-width: 560px) { .proof-points { gap: 5px 12px; font-size: 12px; } }
+  @media (max-width: 560px) {
+    .proof-points { flex-direction: column; gap: 5px; font-size: 12px; }
+  }
 
   /* Model-off proof: the same numbers shown with Claude on and Claude removed.
      Two columns on wide screens, stacked on a phone. */
