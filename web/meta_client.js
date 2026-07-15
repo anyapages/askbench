@@ -323,7 +323,11 @@
     };
   }
 
-  function metaSkepticFlags(row, maxI2, minStudies) {
+  // `m` is the effect measure actually reported by the table (RR/OR/HR). Naming it in the
+  // flag text matters: "CI crosses no-effect (OR 0.8 to 1.3)" is true, the same sentence
+  // with RR is not, and an OR overstates an RR whenever the outcome is common.
+  function metaSkepticFlags(row, maxI2, minStudies, m) {
+    m = m || "RR";
     maxI2 = maxI2 == null ? 75 : maxI2;
     minStudies = minStudies == null ? 3 : minStudies;
     var flags = [];
@@ -335,9 +339,9 @@
       flags.push("high heterogeneity (I²=" + row.i2 + "%); the effect varies too much across populations to trust as one pooled number");
     }
     if (!row.significant) {
-      flags.push("confidence interval crosses no-effect (RR " + row.ci_low + " to " + row.ci_high + "); not significant");
+      flags.push("confidence interval crosses no-effect (" + m + " " + row.ci_low + " to " + row.ci_high + "); not significant");
     } else if (row.rr >= 0.9 && row.rr <= 1.11) {
-      flags.push("effect is clinically negligible (pooled RR " + row.rr + " sits inside the null band 0.90 to 1.11)");
+      flags.push("effect is clinically negligible (pooled " + m + " " + row.rr + " sits inside the null band 0.90 to 1.11)");
     }
     return flags;
   }
@@ -357,7 +361,8 @@
     return rows;
   }
 
-  function focusedAnswer(question, vetted, outcome) {
+  function focusedAnswer(question, vetted, outcome, m) {
+    m = m || "RR";
     var q = String(question || "").toLowerCase();
     var het = vetted.filter(function (v) {
       return v.verdict === "flagged" && (v.flags || []).some(function (f) { return /heterogen/i.test(f); });
@@ -372,13 +377,13 @@
     if (/strongest|effect|largest/.test(q) && vetted.length) {
       var top = vetted[0];
       var tag = top.verdict === "solid" ? "passes" : "does not pass";
-      return "Strongest pooled effect on " + outcome + ": " + top.factor + " (RR " + top.rr +
+      return "Strongest pooled effect on " + outcome + ": " + top.factor + " (" + m + " " + top.rr +
         ", 95% CI " + top.ci_low + " to " + top.ci_high + ", I²=" + top.i2 + "%) — " +
         tag + " the Skeptic's checks.";
     }
     if (solid.length) {
       var names = solid.map(function (v) {
-        return v.factor + " (RR " + v.rr + ", " + v.k + " studies)";
+        return v.factor + " (" + m + " " + v.rr + ", " + v.k + " studies)";
       }).join("; ");
       return "Factors that pass the panel's checks for " + outcome + ": " + names + ".";
     }
@@ -390,8 +395,8 @@
     return "No single factor passes the panel's checks cleanly for " + outcome + ".";
   }
 
-  function synthesize(vetted, outcome) {
-    return focusedAnswer("", vetted, outcome);
+  function synthesize(vetted, outcome, m) {
+    return focusedAnswer("", vetted, outcome, m);
   }
 
   function safeReportLine(vetted) {
@@ -463,20 +468,24 @@
     var parsed = parseStudies(text, map, outcomeArg);
     if (!parsed.ok) return { ok: false, error: parsed.error };
 
+    // The effect measure the table actually reports (RR/OR/HR). Declared before first use:
+    // the flags and the answer sentence both name it, and naming it wrong is the exact
+    // confident-but-wrong this tool refuses.
+    var measure = parsed.effect_measure || "RR";
+
     var ranked = rankFactors(parsed.studies);
     var vetted = ranked.map(function (r) {
-      var flags = metaSkepticFlags(r);
+      var flags = metaSkepticFlags(r, undefined, undefined, measure);
       return Object.assign({}, r, { flags: flags, verdict: flags.length ? "flagged" : "solid", context: null });
     });
 
-    var answer = focusedAnswer(question, vetted, parsed.outcome) || synthesize(vetted, parsed.outcome);
-    var m = parsed.effect_measure || "RR";
+    var answer = focusedAnswer(question, vetted, parsed.outcome, measure) || synthesize(vetted, parsed.outcome, measure);
     var MEASURE_NAME = { RR: "Risk ratios", OR: "Odds ratios", HR: "Hazard ratios" };
-    var methods = (MEASURE_NAME[m] || "Risk ratios") + " pooled per factor with DerSimonian-Laird " +
+    var methods = (MEASURE_NAME[measure] || "Risk ratios") + " pooled per factor with DerSimonian-Laird " +
       "random effects; heterogeneity assessed with Cochran's Q and I²; factors with I² > 75%, " +
       "fewer than three studies, or a CI crossing 1 are flagged." +
-      (m !== "RR"
-        ? " Your table reports " + m + ", so every pooled figure here is an " + m +
+      (measure !== "RR"
+        ? " Your table reports " + measure + ", so every pooled figure here is an " + measure +
           ", not a risk ratio: they are different quantities and are not interchangeable."
         : "");
 
@@ -490,9 +499,9 @@
         safe_report: safeReportLine(vetted),
         debate: stubDebate(vetted, answer),
         refusal: null,
-        effect_measure: m,
+        effect_measure: measure,
         figure: forestPlotSvg(parsed.outcome, vetted),
-        caption: "Random-effects pooled " + (m === "RR" ? "risk ratios" : m === "OR" ? "odds ratios" : "hazard ratios") +
+        caption: "Random-effects pooled " + (measure === "RR" ? "risk ratios" : measure === "OR" ? "odds ratios" : "hazard ratios") +
           " for " + parsed.outcome + ". Green = passes Skeptic checks; amber = flagged.",
         methods: methods,
         data_note: parsed.data_note,
