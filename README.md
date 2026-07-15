@@ -123,7 +123,43 @@ A question goes to a panel, not a single model:
 
 The analysis is deterministic, so the numbers are correct with or without a model. Every number
 in the verdict card and findings table comes from the toolkit, never the model; Claude only
-narrates and explains on top of them. It works over two datasets today:
+narrates and explains on top of them. That split is the whole architecture:
+
+```mermaid
+flowchart LR
+    Q["A bench scientist's<br/>plain-English question"] --> INTAKE
+
+    subgraph C["Claude (reads and writes prose)"]
+        direction TB
+        INTAKE["Intake<br/>reads the messy question,<br/>decides if it is answerable<br/>or asks back"]
+        NARRATE["Narration<br/>explains the panel's<br/>reasoning in plain language"]
+    end
+
+    subgraph T["Deterministic toolkit (Python, no model)"]
+        direction TB
+        ANALYST["Analyst<br/>effect size, Welch t-test,<br/>DerSimonian-Laird pooling, I²"]
+        SKEPTIC["Skeptic<br/>fixed checks: cell counts,<br/>Benjamini-Hochberg FDR,<br/>heterogeneity, thin evidence"]
+        ANALYST --> SKEPTIC
+    end
+
+    INTAKE -->|"the resolved question"| ANALYST
+    SKEPTIC ==>|"every number"| CARD
+    SKEPTIC -.->|"findings to describe"| NARRATE
+    NARRATE -.->|"prose only"| CARD
+
+    CARD["Verdict card<br/>SOLID / FLAGGED<br/>+ the Skeptic's reason"]
+
+    style T fill:#e7f2ec,stroke:#2f6f4f,stroke-width:2px
+    style C fill:#eef1f5,stroke:#55636f,stroke-width:1px
+    style CARD fill:#fff,stroke:#1f7a4d,stroke-width:2px
+```
+
+Read the arrows: **the thick arrow carries every statistic, and it only ever leaves the toolkit.**
+Claude's arrows are dashed, because Claude only ever contributes prose. It cannot write a number
+into the card, which is why turning Claude off leaves all the numbers unchanged, and why a
+hallucinated p-value is not a bug we have to catch, it is a path that does not exist.
+
+It works over two datasets today:
 
 - a single-cell **Perturb-seq** screen (effect size, Welch t-test, cell counts), and
 - a clinical **meta-analysis** (random-effects pooled risk ratio, 95% CI, I² heterogeneity).
