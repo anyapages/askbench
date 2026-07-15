@@ -20,6 +20,7 @@ QUESTIONS = {
         "Which knockouts most raise GENE7?",
         "Which perturbations lower GENE7?",
         "Show me the top hits that raise the main readout gene",
+        "What raises GENE7 the most, and can I trust it?",
     ],
     "clinical": [
         "Which risk factors are too heterogeneous to pool?",
