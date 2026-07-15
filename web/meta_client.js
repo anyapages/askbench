@@ -284,9 +284,16 @@
       outcome: outcome,
       effect_measure: measure,
       factorCount: Object.keys(factors).length,
+      // The OR/HR warning must live HERE, not only in `methods`: methods renders inside the
+      // collapsed forest-plot section, so the single most important caveat (this is not a
+      // risk ratio) was one click from invisible. Caveats go up front, not buried.
       data_note: "Your pasted table (" + studies.length + " study rows, " +
         Object.keys(factors).length + " factor(s)). Outcome: " + outcome +
-        ". Computed locally in your browser — same toolkit math as the server."
+        ". Computed locally in your browser — same toolkit math as the server." +
+        (measure !== "RR"
+          ? " Your table reports " + measure + ", so every pooled figure here is an " +
+            measure + ", not a risk ratio: they are different quantities and are not interchangeable."
+          : "")
     };
   }
 
