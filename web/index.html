@@ -1703,6 +1703,14 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
       clearChipSelection();
     }
 
+    // The proof panel is a fixed worked example on the 13 BCG trials (RR 0.49, I2 92.1%).
+    // It is open by default, so on any other tab it sat directly under the user's own
+    // verdict showing numbers that are not their data, which reads as a mismatch even
+    // though the summary labels it. Show it only where its numbers ARE the numbers on
+    // screen. The BCG tab is the default landing tab, so every visitor still meets it.
+    var proofDetails = document.getElementById("proofDetails");
+    if (proofDetails) proofDetails.hidden = (currentMode !== "clinical_real");
+
     document.querySelectorAll(".mode-pill, .dataset-item").forEach(function (p) {
       p.setAttribute("aria-selected", p.getAttribute("data-mode") === currentMode
         ? "true" : "false");
