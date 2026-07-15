@@ -2243,16 +2243,58 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     return chip ? chip.textContent.trim() : "How heterogeneous are the trials?";
   }
 
+  // Entities this tab's data provably does not contain. The BCG set is 13 published
+  // tuberculosis trials: per-trial 2x2 counts, a pooled risk ratio and heterogeneity.
+  // It holds no genes, knockouts, perturbations or cells. Asking about those is not a
+  // rephrasing of a BCG question, it is unanswerable from this data, and the panel
+  // should say so rather than render a tuberculosis verdict as if it had answered.
+  // NOTE: this is deliberately an off-domain DENY check, not the keyword ALLOWLIST that
+  // was removed in 1be4a31. It cannot reject "can I trust this?" (which names nothing
+  // off-domain); it only fires when the question names data this tab does not have.
+  var _bcgOffDomain = /\b(gene\w*|knockout\w*|knock[- ]?down\w*|ko[_ ]?\d+|perturbation\w*|perturb\w*|crispr|screen\w*|readout|cells?|single[- ]cell|expression)\b/i;
+
+  function bcgScopeRefusal(question) {
+    var q = normalizeQuestion(question);
+    if (!_bcgOffDomain.test(q)) return null;
+    return "This tab holds 13 published BCG tuberculosis trials: per-trial counts, a " +
+           "pooled risk ratio and heterogeneity. It has no gene or perturbation data, so " +
+           "that is not answerable here. Try the Screen tab for genes, or ask about BCG " +
+           "efficacy, pooling or heterogeneity.";
+  }
+
+  // Only the tab's own example chips get the instant baked card. Anything else is a real
+  // question and goes to the live panel, which runs the same toolkit over the same 13
+  // trials server-side (api/ask.py: mode "clinical_real" -> clinical_lab_meeting on the
+  // real BCG set). Previously this returned a canned card for EVERY input, which is why
+  // the tab appeared to answer everything with the same tuberculosis verdict.
+  function bcgBakedExact(question) {
+    var q = normalizeQuestion(question).toLowerCase();
+    var chips = (MODES.clinical_real && MODES.clinical_real.chips) || [];
+    var hit = null, i;
+    for (i = 0; i < chips.length; i++) {
+      if (normalizeQuestion(chips[i]).toLowerCase() === q) { hit = chips[i]; break; }
+    }
+    if (!hit && normalizeQuestion(BAKED_BCG.question).toLowerCase() === q) hit = BAKED_BCG.question;
+    if (!hit) return null;
+
+    var d = Object.assign({}, BAKED_BCG);
+    d.question = question;
+    d.narration = "offline";
+    var lq = normalizeQuestion(hit).toLowerCase();
+    if (/heterogen|pool|trustworthy|one number/.test(lq)) {
+      d.vetted_answer = "The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I²=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it.";
+    } else if (/prevent|efficacy|tuberculosis|effect/.test(lq)) {
+      d.vetted_answer = "Pooled across 13 trials, BCG vaccination associates with tuberculosis risk ratio 0.49 (95% CI 0.345 to 0.695). The panel still does not treat that as one trustworthy number: I²=92.1% is too high to pool honestly.";
+    }
+    return d;
+  }
+
+  // Kept for the offline fallback path (tryBakedFallback) only: if the network fails we
+  // would still rather show the real toolkit numbers than nothing.
   function bcgBakedFor(question) {
     var d = Object.assign({}, BAKED_BCG);
     d.question = question;
     d.narration = "offline";
-    var q = normalizeQuestion(question).toLowerCase();
-    if (/heterogen|pool|trustworthy|one number/.test(q)) {
-      d.vetted_answer = "The panel does not report a single pooled estimate for BCG vaccination: its effect varies too much across populations (I²=92.1%) to trust as one number. Pooling here would hide the disagreement, not resolve it.";
-    } else if (/prevent|efficacy|tuberculosis|effect/.test(q)) {
-      d.vetted_answer = "Pooled across 13 trials, BCG vaccination associates with tuberculosis risk ratio 0.49 (95% CI 0.345 to 0.695). The panel still does not treat that as one trustworthy number: I²=92.1% is too high to pool honestly.";
-    }
     return d;
   }
 
@@ -2421,13 +2463,46 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
       return;
     }
     if (currentMode === "clinical_real") {
-      var bakedBcg = bcgBakedFor(question);
-      setBusy(false);
-      render(bakedBcg, { live: false, cached: true });
-      pushWorklist(bakedBcg, currentMode);
-      requestAnimationFrame(function () {
-        results.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
+      // Unanswerable from 13 tuberculosis trials: say so instead of answering anyway.
+      var refusal = bcgScopeRefusal(question);
+      if (refusal) {
+        setBusy(false);
+        renderClarification(refusal, question);
+        return;
+      }
+      // The tab's own chips stay instant; every other real question runs the live panel
+      // over the same 13 trials.
+      var bakedBcg = bcgBakedExact(question);
+      if (bakedBcg) {
+        setBusy(false);
+        render(bakedBcg, { live: false, cached: true });
+        pushWorklist(bakedBcg, currentMode);
+        requestAnimationFrame(function () {
+          results.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        return;
+      }
+      fetchPanel(question, attempt, { question: question, mode: "clinical_real" })
+        .then(function (r) {
+          clearThinkTimers();
+          setBusy(false);
+          if (r.ok && r.body && r.body.findings) {
+            render(r.body, { live: true });
+            pushWorklist(r.body, currentMode);
+            requestAnimationFrame(function () {
+              results.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          } else if (r.body && r.body.error) {
+            renderClarification(r.body.error, question);
+          } else {
+            finishAskFailure(question);
+          }
+        })
+        .catch(function (err) {
+          clearThinkTimers();
+          setBusy(false);
+          finishAskFailure(question, err);
+        });
       return;
     }
     if (currentMode === "clinical" || currentMode === "single_cell") {
