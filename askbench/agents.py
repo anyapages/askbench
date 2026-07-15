@@ -160,6 +160,28 @@ def skeptic(finding, llm) -> list:
     return out
 
 
+# The screen's gene and knockout labels are anonymised placeholders, so a model
+# asked to name the real gene can only fail. Any reply that gropes for the gene's
+# identity is dropped rather than rendered as self-doubt beside a SOLID verdict.
+_NON_ANSWER_MARKERS = (
+    "[offline]", "no biological context available",
+    "don't have enough", "do not have enough", "not able to determine",
+    "cannot determine", "can't determine", "i'm unsure", "i am unsure",
+    "would need to know", "unclear which", "could you clarify",
+    "i'm not able", "i am not able", "no information about", "not familiar with",
+)
+
+
+def _usable_context(text):
+    """The model's sentence, or None when it is a non-answer."""
+    if not text:
+        return None
+    stripped = text.strip()
+    if any(marker in stripped.lower() for marker in _NON_ANSWER_MARKERS):
+        return None
+    return stripped
+
+
 def contextualist(vetted, gene, llm) -> list:
     """Ground the survivors in biology. Only the solid ones earn a model call.
     A model error never sinks the deterministic answer: context degrades to None
@@ -168,12 +190,16 @@ def contextualist(vetted, gene, llm) -> list:
         if v["verdict"] == "solid":
             try:
                 c = llm(
-                    system="You are a cell biologist. One sentence on what is known "
-                           "about this gene's regulation. If unsure, say so plainly.",
-                    user=f"Knockout {v['perturbation']} shifts {gene}. One sentence.")
-                # A non-answer (offline stub or an empty reply) must not render as a
-                # hedge beside a SOLID verdict, so drop it rather than show self-doubt.
-                v["context"] = c if (c and not c.startswith("[offline]")) else None
+                    system="You are a cell biologist reading a perturbation screen "
+                           "whose gene and knockout labels are anonymised placeholders. "
+                           "Never guess which real gene it is and never ask which gene "
+                           "it is. In one sentence, say what an effect of this size and "
+                           "direction implies mechanistically and what you would check "
+                           "next.",
+                    user=f"Knockout {v['perturbation']} shifts {gene} by "
+                         f"{v['effect']:+.2f} in log-normalised expression across "
+                         f"{v['n_cells']} cells. One sentence.")
+                v["context"] = _usable_context(c)
             except Exception:
                 v["context"] = None
         else:
