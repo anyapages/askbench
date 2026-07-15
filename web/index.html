@@ -1307,7 +1307,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     }
     ensureColumnMap();
     if (!columnMapState || !MetaClient.mapOk(columnMapState)) {
-      return { ok: false, msg: "Map factor + effect columns" };
+      return { ok: false, msg: "Map the effect columns" };
     }
     var summary = MetaClient.statusSummary(text, columnMapState);
     if (!summary.ok) return { ok: false, msg: summary.msg };
@@ -1375,7 +1375,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     }
     ensureColumnMap();
     if (!columnMapState || !MetaClient.mapOk(columnMapState)) {
-      setBootStatus("Map factor + effect columns to see a preview.", true);
+      setBootStatus("Map the effect columns to see a preview.", true);
       setOnboarding(true);
       return false;
     }
@@ -1402,7 +1402,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     ensureColumnMap();
     if (!columnMapState || !MetaClient.mapOk(columnMapState)) {
       if (!results.classList.contains("show")) setOnboarding(true);
-      setBootStatus("Map factor + effect columns to see a preview.", true);
+      setBootStatus("Map the effect columns to see a preview.", true);
       return;
     }
     var summary = MetaClient.statusSummary(csvIn.value, columnMapState);

@@ -21,6 +21,9 @@
     HR: ["log_hr", "loghr", "ln_hr"]
   };
 
+  // Label used when the table has no factor column (single-intervention meta-analysis).
+  var SINGLE_FACTOR_LABEL = "intervention";
+
   var FIELD_ALIASES = {
     factor: ["factor", "risk_factor", "exposure", "treatment", "arm", "group", "intervention"],
     study: ["study", "population", "trial", "label", "cohort", "author", "reference", "paper"],
@@ -127,8 +130,14 @@
     return !!(map.events_treat && treatSize && map.events_ctrl && ctrlSize);
   }
 
+  // A single-intervention meta-analysis is the most common real table there is: one
+  // treatment, many trials, and therefore NO factor column, because there is only one
+  // factor. Hard-requiring `factor` rejected exactly the tables this tab exists to
+  // accept, including metafor's dat.bcg (study,tpos,tneg,cpos,cneg), i.e. the real
+  // published data our own demo is built on. A missing factor column is not a mapping
+  // error; it means every row shares one factor (see SINGLE_FACTOR_LABEL below).
   function mapOk(map) {
-    if (!map || !map.factor) return false;
+    if (!map) return false;
     if (map.log_rr && map.se) return true;
     if (map.rr && map.se) return true;
     if (map.rr && map.ci_low && map.ci_high) return true;
@@ -158,7 +167,7 @@
     if (!text) return { ok: false, error: "Paste a CSV table with your study results." };
     if (text.length > 65536) return { ok: false, error: "Table is too large (max 64 KB)." };
     if (!mapOk(map)) {
-      return { ok: false, error: "Map columns: need a factor column plus one of: raw 2x2 counts " +
+      return { ok: false, error: "Map columns: need one of: raw 2x2 counts " +
         "(events and size for each arm), an effect with its SE, or an effect with both CI bounds." };
     }
 
@@ -187,7 +196,10 @@
     var seenOutcome = null;
     for (var r = 1; r < rows.length; r++) {
       var cells = rows[r];
-      var factor = fi >= 0 ? String(cells[fi] || "").trim() : "";
+      // No factor column at all: a single-intervention meta-analysis, so every row shares
+      // one factor. (A factor column that exists but is blank on this row is still bad
+      // data, and that row is still skipped.)
+      var factor = fi >= 0 ? String(cells[fi] || "").trim() : SINGLE_FACTOR_LABEL;
       if (!factor) continue;
 
       var pop = si >= 0 ? String(cells[si] || "").trim() : "";
