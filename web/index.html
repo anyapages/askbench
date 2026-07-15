@@ -931,7 +931,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
             </div>
             <div class="data-meta-row">
               <label for="outcomeIn">Outcome</label>
-              <input class="csv-outcome" id="outcomeIn" type="text" placeholder="e.g. relapse" value="relapse" autocomplete="off" />
+              <input class="csv-outcome" id="outcomeIn" type="text" placeholder="what you measured, e.g. relapse" value="" autocomplete="off" />
               <button type="button" class="text-btn" id="csvExampleBtn">Reset example</button>
             </div>
             <details class="data-help">
@@ -1379,7 +1379,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
       setOnboarding(true);
       return false;
     }
-    var outcome = (outcomeIn && outcomeIn.value.trim()) || "relapse";
+    var outcome = (outcomeIn && outcomeIn.value.trim()) || "outcome not specified";
     var local = MetaClient.runPanel(csvIn.value, outcome, question, columnMapState);
     if (!local.ok) {
       setBootStatus(local.msg || "Could not parse table.", true);
@@ -1412,7 +1412,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
       return;
     }
     var question = (q.value || "").trim() || MODES.clinical_yours.chips[0];
-    var outcome = (outcomeIn && outcomeIn.value.trim()) || "relapse";
+    var outcome = (outcomeIn && outcomeIn.value.trim()) || "outcome not specified";
     var local = MetaClient.runPanel(csvIn.value, outcome, question, columnMapState);
     if (!local.ok) {
       if (!results.classList.contains("show")) setOnboarding(true);
@@ -1465,7 +1465,8 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
 
   function fillExampleCsv() {
     if (csvIn) csvIn.value = EXAMPLE_CSV;
-    if (outcomeIn && !outcomeIn.value.trim()) outcomeIn.value = "relapse";
+    // Deliberately left blank: the demo default used to leak onto the user's own
+    // verdict card, labelling their results with an outcome they never measured.
     columnMapState = null;
     updateCsvStatus();
   }
@@ -2238,7 +2239,8 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
           return;
         }
         if (typeof MetaClient !== "undefined" && columnMapState && MetaClient.mapOk(columnMapState)) {
-          var local = MetaClient.runPanel(csvIn.value, (outcomeIn && outcomeIn.value) || "relapse",
+          var local = MetaClient.runPanel(csvIn.value,
+                                          (outcomeIn && outcomeIn.value.trim()) || "outcome not specified",
                                           question, columnMapState);
           if (local.ok) {
             setOnboarding(false);

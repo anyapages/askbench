@@ -1,8 +1,16 @@
 # AskBench
 
-**AskBench lets a bench scientist ask their own data a question in plain English and get an
-answer a careful reviewer would sign off on, with every caveat put in front of the answer
-instead of buried.**
+**Paste the results table from a set of papers and ask in plain English whether they can be
+pooled. AskBench answers the way a careful reviewer would, with every caveat in front of the
+answer instead of buried, and refuses outright when one combined number would mislead. Every
+statistic is computed by a tested toolkit, never by the model.**
+
+**Scope, plainly.** Today AskBench pools *per-study results*: raw 2x2 counts, or an effect with
+its uncertainty. That is the stack-of-papers half of a scientist's desk, and it is real. It does
+**not** yet take a single-cell screen: the Perturb-seq tab is a synthetic demonstration that the
+same Skeptic generalises, not an upload path for your own matrix. Real screen support needs
+anndata/scanpy and pseudobulk per biological replicate, and it is not built. We would rather
+tell you that here than have you find it after you trusted the page.
 
 A construct-validity harness for AI that asks the sceptic's questions before answering: does the
 analysis hold, or should it refuse?
