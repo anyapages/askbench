@@ -2253,6 +2253,16 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   // off-domain); it only fires when the question names data this tab does not have.
   var _bcgOffDomain = /\b(gene\w*|knockout\w*|knock[- ]?down\w*|ko[_ ]?\d+|perturbation\w*|perturb\w*|crispr|screen\w*|readout|cells?|single[- ]cell|expression)\b/i;
 
+  // The real BCG data: 13 published trials (Colditz 1994), 728 bytes. The identical
+  // DerSimonian-Laird pooling already runs in the browser for the "your table" tab
+  // (MetaClient.poolRandomEffects), and it reproduces the server exactly: RR 0.49,
+  // 95% CI 0.345-0.695, I2 92.1%, k=13, n=357347. So there is no reason to pay a
+  // ~3.5-5s Vercel Python cold start (327MB bundle: scipy 729ms + matplotlib 443ms
+  // just to import) to pool 728 bytes. Computing it here makes the landing tab
+  // instant, keeps every number real rather than canned, and keeps the demo alive
+  // with no network at all.
+  var BCG_CSV = "factor,study,log_rr,se,n\nBCG vaccination,Aronson 1948,-0.8893,0.5706,262\nBCG vaccination,Ferguson & Simes 1949,-1.5854,0.4411,609\nBCG vaccination,Rosenthal 1960,-1.3481,0.6445,451\nBCG vaccination,Hart & Sutherland 1977,-1.4416,0.1415,26465\nBCG vaccination,Frimodt-Moller 1973,-0.2175,0.2263,10877\nBCG vaccination,Stein & Aronson 1953,-0.7861,0.0831,2992\nBCG vaccination,Vandiviere 1973,-1.6209,0.4722,3174\nBCG vaccination,TPT Madras 1980,0.012,0.0629,176782\nBCG vaccination,Coetzee & Berjak 1968,-0.4694,0.2376,14776\nBCG vaccination,Rosenthal 1961,-1.3713,0.2702,3381\nBCG vaccination,Comstock 1974,-0.3394,0.1114,77972\nBCG vaccination,Comstock & Webster 1969,0.4459,0.7297,4839\nBCG vaccination,Comstock 1976,-0.0173,0.2672,34767";
+
   function bcgScopeRefusal(question) {
     var q = normalizeQuestion(question);
     if (!_bcgOffDomain.test(q)) return null;
@@ -2470,18 +2480,36 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
         renderClarification(refusal, question);
         return;
       }
-      // The tab's own chips stay instant; every other real question runs the live panel
-      // over the same 13 trials.
-      var bakedBcg = bcgBakedExact(question);
-      if (bakedBcg) {
+      // Compute the real 13-trial pooling right here, instantly. This is the same
+      // DerSimonian-Laird the server runs and it returns identical numbers, so there is
+      // nothing to wait for: no cold start, no network, and it still works offline.
+      var localBcg = null;
+      try {
+        var bcgMap = MetaClient.suggestColumnMap(MetaClient.headersFromCsv(BCG_CSV));
+        var bcgRun = MetaClient.runPanel(BCG_CSV, "tuberculosis", question, bcgMap);
+        if (bcgRun && bcgRun.ok) localBcg = bcgRun.data;
+      } catch (e) { localBcg = null; }
+
+      if (localBcg) {
         setBusy(false);
-        render(bakedBcg, { live: false, cached: true });
-        pushWorklist(bakedBcg, currentMode);
+        // Keep the baked figure/caption/methods for the tab's own example questions:
+        // those are pre-rendered artwork, not numbers, and the numbers above are live.
+        var pre = bcgBakedExact(question);
+        if (pre && pre.figure) {
+          localBcg.figure = pre.figure;
+          localBcg.caption = pre.caption;
+          localBcg.methods = pre.methods;
+          if (pre.debate && pre.debate.length) localBcg.debate = pre.debate;
+        }
+        render(localBcg, { live: true });
+        pushWorklist(localBcg, currentMode);
         requestAnimationFrame(function () {
           results.scrollIntoView({ behavior: "smooth", block: "start" });
         });
         return;
       }
+
+      // Only if the in-browser engine could not run at all.
       fetchPanel(question, attempt, { question: question, mode: "clinical_real" })
         .then(function (r) {
           clearThinkTimers();
