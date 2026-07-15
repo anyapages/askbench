@@ -7,9 +7,9 @@
 <link rel="canonical" href="https://askbench-weld.vercel.app/" />
 <meta property="og:url" content="https://askbench-weld.vercel.app/" />
 <meta property="og:title" content="AskBench" />
-<meta property="og:description" content="A statistical panel checks the evidence before the model speaks — and refuses when pooling is not safe." />
+<meta property="og:description" content="A statistical panel checks the evidence before the model speaks, and refuses when pooling is not safe." />
 <!--
-  AskBench — the analysis agent that says no. Numbers by the toolkit, never the model.
+  AskBench. The analysis agent that says no. Numbers by the toolkit, never the model.
   MIT licensed.
 -->
 <title>AskBench</title>
@@ -317,6 +317,16 @@
     box-shadow: none;
   }
   :root[data-theme="dark"] .verdict-card { box-shadow: none; }
+
+  /* Thesis: what this tool is, in the first frame. The pane title is a dataset name
+     and is rewritten per tab by applyMode, so the thesis lives here where it is
+     always visible and JS never touches it. */
+  .pane-thesis {
+    margin: 0 0 14px; font-size: 13.5px; line-height: 1.55;
+    color: var(--text-dim); max-width: 64ch;
+  }
+  .pane-thesis b { color: var(--text); font-weight: 600; }
+  @media (max-width: 560px) { .pane-thesis { font-size: 13px; margin-bottom: 12px; } }
 
   /* Model-off proof: the same numbers shown with Claude on and Claude removed.
      Two columns on wide screens, stacked on a phone. */
@@ -810,7 +820,7 @@
       <aside class="sidebar" aria-label="Datasets">
         <div class="sidebar-brand">
           <p class="sidebar-kicker">Workspace</p>
-          <p class="sidebar-hint">13 real BCG trials open first — instant toolkit verdict, no waiting.</p>
+          <p class="sidebar-hint">13 real BCG trials open first: instant toolkit verdict, no waiting.</p>
         </div>
         <nav class="dataset-nav mode-groups" role="tablist" aria-label="Dataset">
           <p class="sidebar-label">Start here</p>
@@ -845,10 +855,11 @@
       </aside>
 
       <div class="main-pane">
+        <p class="pane-thesis">Most tools give you an answer. <b>AskBench tells you whether the statistics support one.</b> The toolkit computes every number, the Skeptic refuses what it cannot support.</p>
         <header class="pane-header">
           <div class="pane-titles">
             <h1 class="pane-title" id="modeTitle">BCG · 13 trials</h1>
-            <p class="workspace-lede" id="modeLede">Published per-trial data (Colditz 1994). RR 0.49 — but I²=92% is too high for one honest pooled number.</p>
+            <p class="workspace-lede" id="modeLede">Published per-trial data (Colditz 1994). Pooled RR 0.49, but I²=92.1% is too high for one honest pooled number.</p>
           </div>
           <span class="pane-badge" id="paneBadge" hidden></span>
         </header>
@@ -1034,7 +1045,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     <section class="measure" aria-labelledby="dataH2">
       <details class="about-details">
         <summary>About AskBench</summary>
-        <p class="lede" id="lede">A statistical panel checks the evidence before the model speaks — and refuses when pooling is not safe. Numbers from the toolkit, never the model.</p>
+        <p class="lede" id="lede">A statistical panel checks the evidence before the model speaks, and refuses when pooling is not safe. Numbers from the toolkit, never the model.</p>
         <p class="start-hint" id="startHint">
           Most tools give you an answer. AskBench tells you whether the statistics support one.
           The toolkit computes; the Skeptic refuses when checks fail.
@@ -1617,7 +1628,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   // REAL published data: reuses the clinical table schema with different framing.
   MODES.clinical_real = {
     h1: "BCG · 13 trials",
-    lede: "Published per-trial data (Colditz 1994). RR 0.49 — but I²=92% is too high for one honest pooled number.",
+    lede: "Published per-trial data (Colditz 1994). Pooled RR 0.49, but I²=92.1% is too high for one honest pooled number.",
     onboard: "Verdict is computed instantly from the toolkit. Tap a question to rephrase the headline.",
     placeholder: "How heterogeneous are the BCG trials?",
       chips: [
