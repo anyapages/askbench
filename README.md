@@ -13,7 +13,7 @@ then refuses to report it as one number, because the trials are too heterogeneou
 honestly (I2 = 92.1%). No model in the loop, one command, reproducible against the source. See
 [A real finding, on real published data](#a-real-finding-on-real-published-data) below.
 
-**Try it live:** [askbench-weld.vercel.app](https://askbench-weld.vercel.app) — canonical demo URL
+**Try it live:** [askbench-weld.vercel.app](https://askbench-weld.vercel.app), the canonical demo URL
 (no sign-up, runs model-free by default). The frontend is static on Vercel; `/ask` runs as a Python
 function on the same deployment (set `ANTHROPIC_API_KEY` in Vercel for live narration).
 
@@ -72,7 +72,7 @@ python3 eval.py
 Every question comes back as a single card: the vetted answer on top, then a table of
 findings each marked `SOLID` or `FLAGGED`, with the Skeptic's reason under every flagged row.
 
-![AskBench on the real BCG meta-analysis: 13 published tuberculosis-vaccine trials, the deterministic headline numbers (200 eval seeds, a 1.58% false-positive rate after Benjamini-Hochberg, BCG pooled at I-squared 92.1% and FLAGGED, byte-identical on replay), and a worklist where each question is marked SOLID or FLAGGED with the Skeptic's one-line reason.](assets/verdict-card.png)
+![AskBench on the real BCG meta-analysis: the thesis, three verified proofs (13 published BCG trials with pooled RR 0.49 and no pooled number reported at I-squared 92.1%, 200 eval seeds with a 1.58% false-positive rate after Benjamini-Hochberg, and numbers identical with Claude switched off), and the panel verdict refusing to report one pooled number, with the Colditz 1994 citation](assets/verdict-card.png)
 
 ---
 
