@@ -1641,11 +1641,14 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
         { label: "Studies", num: true }, { label: "I²", num: true },
         { label: "Verdict" }
       ],
-      cells: function (f) {
+      cells: function (f, measure) {
         var ci = '<span class="cid">(' + Number(f.ci_low).toFixed(2) + " to " +
                  Number(f.ci_high).toFixed(2) + ")</span>";
+        // data-label is the row label on narrow screens, so it must name the real measure
+        // too: on a phone this IS the column header.
+        var eff = (measure || "RR") + " (95% CI)";
         return '<td class="pert" data-label="Risk factor">' + esc(f.factor) + "</td>" +
-               '<td class="num" data-label="RR (95% CI)">' + esc(Number(f.rr).toFixed(2)) + " " + ci + "</td>" +
+               '<td class="num" data-label="' + esc(eff) + '">' + esc(Number(f.rr).toFixed(2)) + " " + ci + "</td>" +
                '<td class="num" data-label="Studies">' + esc(f.k) + "</td>" +
                '<td class="num" data-label="I²">' + esc(Number(f.i2).toFixed(0)) + "%</td>" +
                '<td data-label="Verdict">' + badge(f) + "</td>";
@@ -2026,7 +2029,7 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     var span = m.columns.length;
     var html = "";
     findings.forEach(function (f) {
-      html += '<tr class="finding">' + m.cells(f) + "</tr>";
+      html += '<tr class="finding">' + m.cells(f, measure) + "</tr>";
       var flags = Array.isArray(f.flags) ? f.flags : [];
       var ctx = f.context && String(f.context).trim();
       if (flags.length || (ctx && f.verdict === "solid")) {
@@ -2662,8 +2665,12 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
         "",
         "Outcome: " + (d.outcome || "")
       ];
+      // This text leaves the tool and lands in a manuscript or a slide, so it is the LAST
+      // place that may say "RR" about an odds or hazard ratio. Name the measure the table
+      // actually reported.
+      var expMeasure = d.effect_measure || "RR";
       (d.findings || []).forEach(function (f) {
-        lines.push("- " + f.factor + ": RR " + f.rr + " (" + f.ci_low + "–" + f.ci_high + "), I²=" +
+        lines.push("- " + f.factor + ": " + expMeasure + " " + f.rr + " (" + f.ci_low + "–" + f.ci_high + "), I²=" +
           f.i2 + "%, " + (f.verdict || "").toUpperCase());
       });
       if (d.methods) lines.push("", "Methods: " + d.methods);
