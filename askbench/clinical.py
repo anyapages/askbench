@@ -21,6 +21,8 @@ import re
 from dataclasses import dataclass
 from io import StringIO
 
+from .agents import _usable_context
+
 
 @dataclass
 class Study:
@@ -262,9 +264,12 @@ def parse_meta_csv(text: str, outcome: str = "outcome") -> tuple[MetaData | None
 # The panel (mirrors agents.lab_meeting, over meta-analysis data)
 # ---------------------------------------------------------------------------
 
+# Stems, not whole words: a trailing \b here would reject the tab's own example
+# questions, because "trials", "pooling", "heterogeneity" and "vaccination" never
+# match the bare stem. Leading \b only, so each alternative matches as a prefix.
 _BCG_TERMS = re.compile(
-    r"\b(bcg|bgc|tuberculosis|tb\b|vaccine|trial|heterogen|pool|meta|efficacy|"
-    r"prevent|effect|colditz|latitude)\b",
+    r"\b(bcg|bgc|tuberculosis|tb\b|vaccin|trial|heterogen|pool|meta|efficac|"
+    r"prevent|effect|colditz|latitude)",
     re.I,
 )
 _GENE_TERMS = re.compile(r"\b(gene|knockout|perturb|screen|crispr|ko_)\b", re.I)
@@ -354,14 +359,14 @@ def clinical_contextualist(vetted, outcome, llm) -> list:
         if v["verdict"] == "solid":
             try:
                 c = llm(
-                    system="You are a haematologist. One sentence on the plausible "
-                           "mechanism by which this factor raises the stated outcome. "
-                           "If unsure, say so plainly.",
+                    system="You are a haematologist. In one sentence, give the most "
+                           "plausible mechanism by which this factor raises the stated "
+                           "outcome. Never ask for clarification and never say you are "
+                           "unsure: if the mechanism is not established, name the most "
+                           "plausible one and say it is not established.",
                     user=f"Factor: {v['factor']}, pooled RR {v['rr']}, outcome "
                          f"{outcome}. One sentence on the mechanism.")
-                # A non-answer (offline stub or empty reply) must not render as a hedge
-                # beside a SOLID verdict, so drop it rather than show self-doubt.
-                v["context"] = c if (c and not c.startswith("[offline]")) else None
+                v["context"] = _usable_context(c)
             except Exception:
                 # A model error never sinks the deterministic answer.
                 v["context"] = None
