@@ -37,13 +37,16 @@
     // Raw 2x2 counts: the most common real format, and what Colditz/dat.bcg actually is.
     // Requiring a pre-computed log_rr+se meant the user had to write code first, which
     // contradicts the whole "no code required" promise.
-    events_treat: ["events_treat", "events_treated", "tpos", "a", "e_treat", "event_exposed", "cases_treat"],
-    total_treat: ["total_treat", "n_treat", "n1", "n_treated", "total_treated", "n_exposed"],
-    events_ctrl: ["events_ctrl", "events_control", "cpos", "c", "e_ctrl", "event_control", "cases_ctrl"],
-    total_ctrl: ["total_ctrl", "n_ctrl", "n0", "n_control", "total_control", "n_unexposed"],
+    // Aliases cover both word orders a scientist naturally writes: "events_treated"
+    // and "treated_events", "total_control" and "control_total". A real paste should
+    // map without the user renaming columns first.
+    events_treat: ["events_treat", "events_treated", "treated_events", "treatment_events", "tpos", "a", "e_treat", "event_exposed", "events_exposed", "exposed_events", "cases_treat"],
+    total_treat: ["total_treat", "total_treated", "treated_total", "treatment_total", "n_treat", "n_treated", "treated_n", "treatment_n", "n1", "n_exposed", "exposed_total", "exposed_n"],
+    events_ctrl: ["events_ctrl", "events_control", "control_events", "ctrl_events", "comparison_events", "cpos", "c", "e_ctrl", "event_control", "events_unexposed", "unexposed_events", "cases_ctrl"],
+    total_ctrl: ["total_ctrl", "total_control", "control_total", "ctrl_total", "comparison_total", "n_ctrl", "n_control", "control_n", "ctrl_n", "n0", "n_unexposed", "unexposed_total", "unexposed_n"],
     // metafor's dat.bcg column names: tpos/tneg/cpos/cneg (negatives, not totals)
-    nonevents_treat: ["tneg", "nonevents_treat", "noncases_treat"],
-    nonevents_ctrl: ["cneg", "nonevents_ctrl", "noncases_ctrl"]
+    nonevents_treat: ["tneg", "nonevents_treat", "nonevents_treated", "treated_nonevents", "noncases_treat"],
+    nonevents_ctrl: ["cneg", "nonevents_ctrl", "nonevents_control", "control_nonevents", "noncases_ctrl"]
   };
 
   // Which effect measure does this table report? Returns "RR" | "OR" | "HR" | "" (unknown).
