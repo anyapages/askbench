@@ -151,10 +151,15 @@
   }
   .dataset-nav { display: flex; flex-direction: column; gap: 1px; }
   .dataset-item {
-    appearance: none; display: flex; align-items: center; gap: 8px; width: 100%;
+    appearance: none; display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%;
     text-align: left; padding: 9px 14px; border: 0; background: transparent;
     font-family: var(--mono); font-size: 11.5px; color: var(--text-dim);
     cursor: pointer; transition: background .12s ease, color .12s ease;
+  }
+  .ds-row { display: flex; align-items: center; gap: 8px; }
+  .ds-note {
+    font-family: var(--sans); font-size: 10px; line-height: 1.35;
+    color: var(--text-faint); padding-left: 18px;
   }
   .dataset-item:hover { color: var(--text); background: color-mix(in srgb, var(--panel) 55%, transparent); }
   .dataset-item[aria-selected="true"] {
@@ -261,6 +266,12 @@
     padding: 6px 4px; text-decoration: underline; text-underline-offset: 2px;
   }
   .text-btn:hover { color: var(--accent); }
+  .data-formats {
+    margin: 0 0 10px; padding: 9px 11px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--panel-2);
+  }
+  .data-formats-line { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+  .data-formats-actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 14px; }
   .data-help { margin-top: 8px; }
   .data-help summary {
     cursor: pointer; font-size: 12px; color: var(--text-faint); font-weight: 600;
@@ -771,8 +782,9 @@
     .sidebar { border-right: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
     .dataset-nav { flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 0 10px 6px; }
     .sidebar-label { display: none; }
-    .dataset-item { width: auto; border-radius: 8px; padding: 7px 10px; box-shadow: none; }
+    .dataset-item { width: auto; flex-direction: row; align-items: center; border-radius: 8px; padding: 7px 10px; box-shadow: none; }
     .dataset-item[aria-selected="true"] { box-shadow: none; border: 1px solid var(--accent); }
+    .ds-note { display: none; }
     .sidebar-brand, .sidebar-foot { display: none; }
     /* Keep Run as a compact inline button aligned with the input, not a full-width CTA. */
     .ask { flex-direction: row; align-items: flex-end; }
@@ -852,29 +864,41 @@
           <p class="sidebar-label">Start here</p>
           <button type="button" class="dataset-item mode-pill" id="mode-clinical_real" role="tab"
                   aria-selected="true" data-mode="clinical_real">
-            <span class="ds-icon" aria-hidden="true">◆</span>
-            <span class="ds-name">bcg_13trials.csv</span>
-            <span class="ds-tag real">REAL</span>
+            <span class="ds-row">
+              <span class="ds-icon" aria-hidden="true">◆</span>
+              <span class="ds-name">bcg_13trials.csv</span>
+              <span class="ds-tag real">REAL</span>
+            </span>
+            <span class="ds-note">Flagged: too heterogeneous to pool (I²=92%)</span>
           </button>
           <p class="sidebar-label">Examples</p>
           <button type="button" class="dataset-item mode-pill" id="mode-clinical" role="tab"
                   aria-selected="false" data-mode="clinical">
-            <span class="ds-icon" aria-hidden="true">◇</span>
-            <span class="ds-name">vte_benchmark.csv</span>
-            <span class="ds-tag">SYNTH</span>
+            <span class="ds-row">
+              <span class="ds-icon" aria-hidden="true">◇</span>
+              <span class="ds-name">vte_benchmark.csv</span>
+              <span class="ds-tag">SYNTH</span>
+            </span>
+            <span class="ds-note">Most factors pass; immobility and IVF_ART flagged</span>
           </button>
           <button type="button" class="dataset-item mode-pill" id="mode-single_cell" role="tab"
                   aria-selected="false" data-mode="single_cell">
-            <span class="ds-icon" aria-hidden="true">◇</span>
-            <span class="ds-name">perturb_seq.csv</span>
-            <span class="ds-tag">SYNTH</span>
+            <span class="ds-row">
+              <span class="ds-icon" aria-hidden="true">◇</span>
+              <span class="ds-name">perturb_seq.csv</span>
+              <span class="ds-tag">SYNTH</span>
+            </span>
+            <span class="ds-note">KO_0/KO_1 pass; KO_3 flagged (too few cells)</span>
           </button>
           <p class="sidebar-label">Your data</p>
           <button type="button" class="dataset-item mode-pill" id="mode-clinical_yours" role="tab"
                   aria-selected="false" data-mode="clinical_yours">
-            <span class="ds-icon" aria-hidden="true">⌗</span>
-            <span class="ds-name">your_table.csv</span>
-            <span class="ds-tag">PASTE</span>
+            <span class="ds-row">
+              <span class="ds-icon" aria-hidden="true">⌗</span>
+              <span class="ds-name">your_table.csv</span>
+              <span class="ds-tag">PASTE</span>
+            </span>
+            <span class="ds-note">Paste RR/HR rows or 2×2 counts</span>
           </button>
         </nav>
         <p class="sidebar-foot">Toolkit pools · Skeptic refuses · <a href="/leaderboard">Leaderboard</a></p>
@@ -913,6 +937,13 @@
             <div class="data-card-head">
               <p class="data-title">Study table</p>
               <span class="data-status" id="csvStatus">Checking…</span>
+            </div>
+            <div class="data-formats">
+              <p class="data-formats-line">Two shapes work: per-study effect sizes (RR or HR with a 95% CI), or raw 2×2 counts (events and total per arm).</p>
+              <div class="data-formats-actions">
+                <button type="button" class="text-btn" id="csvTemplateBtn">Download template</button>
+                <button type="button" class="text-btn" id="csvLoadExampleBtn">Load example into the box</button>
+              </div>
             </div>
             <textarea id="csvIn" spellcheck="false" autocomplete="off" aria-label="Paste CSV table">factor,study,log_rr,se,n
 intervention,Alpha trial,-0.7,0.2,500
@@ -1206,6 +1237,8 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
   var csvIn = document.getElementById("csvIn");
   var csvStatus = document.getElementById("csvStatus");
   var csvExampleBtn = document.getElementById("csvExampleBtn");
+  var csvTemplateBtn = document.getElementById("csvTemplateBtn");
+  var csvLoadExampleBtn = document.getElementById("csvLoadExampleBtn");
   var outcomeIn = document.getElementById("outcomeIn");
   var onboarding = document.getElementById("onboarding");
   var onboardBlurb = document.getElementById("onboardBlurb");
@@ -1221,6 +1254,14 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     "intervention,Beta trial,0.1,0.18,400\n" +
     "intervention,Gamma trial,-0.9,0.25,600\n" +
     "placebo_arm,Study A,0.05,0.12,300";
+
+  // Starter table in the most common accepted shape: raw 2x2 counts, one row per study.
+  // Header plus three example rows the user can overwrite. Shared by "Download template"
+  // and "Load example into the box" so both show the same valid shape.
+  var TEMPLATE_CSV = "study,events_treated,total_treated,events_control,total_control\n" +
+    "Trial A,12,200,24,200\n" +
+    "Trial B,9,180,20,180\n" +
+    "Trial C,15,320,28,300\n";
 
   var csvPreviewWrap = document.getElementById("csvPreviewWrap");
   var csvPreviewBody = document.getElementById("csvPreviewBody");
@@ -1475,6 +1516,20 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     }
   }
 
+  // Build the starter CSV client-side and hand it to the browser as a download. No server
+  // round trip, so it works from the static page.
+  function downloadCsv(filename, text) {
+    var blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  }
+
   function fillExampleCsv() {
     if (csvIn) csvIn.value = EXAMPLE_CSV;
     // Deliberately left blank: the demo default used to leak onto the user's own
@@ -1689,11 +1744,11 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     h1: "Your table",
     lede: "Paste per-study HR/RR rows. The toolkit pools each factor and refuses when one combined number would mislead.",
     onboard: "Example loaded. Replace the table, map columns if needed, then Run.",
-    placeholder: "Which factors are too heterogeneous to pool?",
+    placeholder: "Can I report one combined number?",
       chips: [
-        "Which factors are too heterogeneous to pool?",
-        "What is the strongest pooled effect?",
-        "Can I report one combined number?"
+        "Can I report one combined number?",
+        "Which factor is too heterogeneous to pool?",
+        "What is the strongest pooled effect?"
       ],
     target: MODES.clinical.target,
     columns: MODES.clinical.columns,
@@ -1805,6 +1860,20 @@ placebo_arm,Study A,0.05,0.12,300</textarea>
     csvExampleBtn.addEventListener("click", function () {
       fillExampleCsv();
       showNotice("Example table restored — preview updates automatically.");
+    });
+  }
+  if (csvTemplateBtn) {
+    csvTemplateBtn.addEventListener("click", function () {
+      downloadCsv("askbench_template.csv", TEMPLATE_CSV);
+    });
+  }
+  if (csvLoadExampleBtn) {
+    csvLoadExampleBtn.addEventListener("click", function () {
+      if (csvIn) csvIn.value = TEMPLATE_CSV;
+      columnMapState = null;
+      if (outcomeIn && !outcomeIn.value.trim()) outcomeIn.value = "the event";
+      updateCsvStatus();
+      showNotice("Example loaded. Press Run to see the verdict on these numbers.");
     });
   }
 
